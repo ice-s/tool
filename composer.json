@@ -1,0 +1,29 @@
+{
+  "name": "ice-s/tool",
+  "description": "Tool",
+  "type": "php",
+  "version": "1.0.0",
+  "authors": [
+    {
+      "name": "ice-s",
+      "email": "nguyentruongson93@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=7.0.0",
+    "prettus/l5-repository": "^2.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "Ices\\Tool\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Ices\\Tool\\ToolCrudServiceProvider"
+      ]
+    }
+  }
+}

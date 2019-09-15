@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Entities\Models\User;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\RegisterFormRequest;
+use Illuminate\Http\Request;
+use Tymon\JWTAuth\Exceptions\TokenBlacklistedException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Facades\JWTAuth;
+
+class AuthController extends Controller
+{
+    public function register(RegisterFormRequest $request)
+    {
+        $user           = new User();
+        $user->email    = $request->email;
+        $user->name     = $request->name;
+        $user->password = bcrypt($request->password);
+        $user->save();
+        return response([
+            'status' => 'success',
+            'data'   => $user
+        ], 200);
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
+
+        if (!$token = auth('api')->attempt($credentials)) {
+            return response([
+                'status' => 'error',
+                'error'  => 'invalid.credentials',
+                'msg'    => 'Invalid Credentials.'
+            ], 400);
+        }
+
+        lg("created token : " . $token);
+
+        return response([
+            'status' => 'success',
+            'token'  => $token,
+        ])->header('Authorization', $token);
+    }
+
+    public function logout(Request $request)
+    {
+        try {
+            $token = JWTAuth::getToken();
+            JWTAuth::setToken($token)->invalidate();
+
+            lg("logout token : " . $token);
+        } catch (TokenExpiredException $e) {
+            return response()->json(['token_expired'], 401);
+        }
+
+        return response([
+            'status' => 'success',
+        ]);
+    }
+
+    public function refresh()
+    {
+        try {
+            $token = JWTAuth::getToken();
+            if (!$user = JWTAuth::parseToken()->authenticate()) {
+                return response()->json(['user_not_found'], 404);
+            }
+        } catch (TokenExpiredException $e) {
+            return response()->json(['token_expired'], 401);
+        } catch (TokenBlacklistedException $e){
+            return response()->json(['token_expired'], 401);
+        }
+
+        $new_token = JWTAuth::refresh($token);
+
+        lg("new token : " . $token);
+
+        return response([
+            'status' => 'success',
+            'token'  => $new_token,
+        ])->header('Authorization', $new_token);
+    }
+}

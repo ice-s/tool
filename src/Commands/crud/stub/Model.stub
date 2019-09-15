@@ -1,0 +1,12 @@
+<?php
+
+namespace App\Entities\Models{{Path}};
+
+use App\Entities\Models\BaseModel;
+
+class {{Name}} extends BaseModel
+{
+    protected $table = '{{Table}}';
+
+    protected $fillable = {{fillable}};
+}

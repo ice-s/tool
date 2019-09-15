@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Entities\Models\BaseModel;
+use Illuminate\Database\Eloquent\Builder;
+
+abstract class BaseRepository
+{
+    /**
+     * @var Builder
+     */
+    protected $model;
+
+    public function __construct()
+    {
+        $this->model = $this->makeModel();
+    }
+
+    /**
+     * @return BaseModel|mixed
+     */
+    public function makeModel()
+    {
+        return app($this->model());
+    }
+
+    /**
+     * @return BaseModel::class
+     */
+    abstract public function model();
+
+    /**
+     * @param $id
+     *
+     * @return \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null|static|static[]
+     */
+    public function find($id)
+    {
+        return $this->model->find($id);
+    }
+
+    /**
+     * @param array $attributes
+     *
+     * @return $this|\Illuminate\Database\Eloquent\Model
+     */
+    public function create(array $attributes)
+    {
+        return $this->model->create($attributes);
+    }
+
+    /**
+     * @param $id
+     * @param array $attributes
+     * @param array $options
+     *
+     * @return BaseRepository|bool|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null|static[]
+     */
+    public function update($id, array $attributes, array $options = [])
+    {
+        $result = $this->find($id);
+        if ($result) {
+            $result->update($attributes, $options);
+
+            return $result;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $id
+     *
+     * @return bool
+     */
+    public function delete($id)
+    {
+        $result = $this->find($id);
+        if ($result) {
+            try {
+                $result->delete();
+            } catch (\Exception $e) {
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array $columns
+     *
+     * @return \Illuminate\Database\Eloquent\Collection|static[]
+     */
+    public function all($columns = ['*'])
+    {
+        return $this->model->all($columns);
+    }
+
+    /**
+     * @param $limit
+     * @param array $option
+     *
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function paginate($limit, $option = [])
+    {
+        return $this->model->paginate($limit);
+    }
+}

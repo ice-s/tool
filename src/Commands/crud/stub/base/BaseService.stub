@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Services;
+
+use App\Repositories\BaseRepository;
+
+abstract class BaseService
+{
+    /**
+     * @var BaseRepository;
+     */
+    protected $mainRepository;
+
+    public function find($id)
+    {
+        return $this->mainRepository->find($id);
+    }
+
+    public function all()
+    {
+        return $this->mainRepository->all();
+    }
+
+    public function update($id, array $attributes, array $options = [])
+    {
+        return $this->mainRepository->update($id, $attributes, $options);
+    }
+
+    public function create($attributes)
+    {
+        return $this->mainRepository->create($attributes);
+    }
+
+    public function delete($id)
+    {
+        return $this->mainRepository->delete($id);
+    }
+
+    public function paginate($limit = PAGE_LIMIT)
+    {
+        return $this->mainRepository->paginate($limit);
+    }
+}
