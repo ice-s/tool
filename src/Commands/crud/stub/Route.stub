@@ -1,0 +1,13 @@
+<?php
+
+namespace Routes{{Path}};
+
+use Illuminate\Support\Facades\Route;
+
+class {{Name}}
+{
+    public static function route()
+    {
+        Route::resource('{{prefix}}', '{{Controller}}');
+    }
+}

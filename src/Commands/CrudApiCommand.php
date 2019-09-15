@@ -27,6 +27,7 @@ class CrudApiCommand extends Command
     protected $resourcePath;
     protected $requestPath;
     protected $controllerApiPath;
+    protected $routePath;
 
     protected $varName;
     protected $varService;
@@ -49,6 +50,7 @@ class CrudApiCommand extends Command
         $this->resourcePath = app_path('Resources');
         $this->requestPath = app_path('Http\Requests');
         $this->controllerApiPath = app_path('Http\Controllers\Api');
+        $this->routePath = base_path('routes');
     }
 
     /**
@@ -124,6 +126,7 @@ class CrudApiCommand extends Command
             $this->createRequest();
             $this->createAuthController();
             $this->createController();
+            $this->createRoute();
         } else {
             $this->error('Nothing to crud');
         }
@@ -269,6 +272,27 @@ class CrudApiCommand extends Command
             $this->info("AuthController.php has created");
         } else {
             $this->warn("AuthController.php exist");
+        }
+    }
+
+    public function createRoute(){
+        $stubFile = $this->getStub('Route.stub');
+        $template = file_get_contents($stubFile);
+        $dataReplace = [
+            'Name' => $this->varName,
+            'Path' => $this->varPath,
+            'Controller' => $this->varName . "Controller",
+            'prefix' => mb_strtolower($this->varName),
+        ];
+
+        $template = $this->replaceStub($template, $dataReplace);
+        if (!file_exists($this->routePath . $this->varPath . "/" . $this->varName . ".php") || $this->varForce) {
+            $this->makeDir($this->routePath . $this->varPath);
+            file_put_contents($this->routePath . $this->varPath . "/" . $this->varName . ".php",
+                $template);
+            $this->info($this->varPath . "/" . $this->varName . ".php has created");
+        } else {
+            $this->warn($this->varPath . "/" . $this->varName . ".php exist");
         }
     }
 
