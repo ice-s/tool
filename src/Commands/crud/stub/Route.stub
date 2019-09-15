@@ -8,6 +8,6 @@ class {{Name}}
 {
     public static function route()
     {
-        Route::resource('{{prefix}}', 'Api\{{Path}}{{Controller}}');
+        Route::resource('{{prefix}}', 'Api{{Path}}\{{Controller}}');
     }
 }

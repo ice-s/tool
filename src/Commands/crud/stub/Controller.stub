@@ -7,7 +7,7 @@ use App\Resources{{Path}}\{{Name}}Resource;
 use App\Services{{Path}}\{{Name}}Service;
 use App\Http\Requests{{Path}}\{{Name}}FormRequest;
 
-class {{Name}}Controller extend Controller
+class {{Name}}Controller extends Controller
 {
     protected ${{name}}Service;
 
