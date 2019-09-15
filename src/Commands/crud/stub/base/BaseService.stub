@@ -36,7 +36,7 @@ abstract class BaseService
         return $this->mainRepository->delete($id);
     }
 
-    public function paginate($limit = PAGE_LIMIT)
+    public function paginate($limit = 20)
     {
         return $this->mainRepository->paginate($limit);
     }

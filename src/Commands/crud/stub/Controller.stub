@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api{{Path}};
 
+use App\Http\Controllers\Controller;
 use App\Resources{{Path}}\{{Name}}Resource;
 use App\Services{{Path}}\{{Name}}Service;
 use App\Http\Requests{{Path}}\{{Name}}FormRequest;
 
-class {{Name}}Controller
+class {{Name}}Controller extend Controller
 {
     protected ${{name}}Service;
 
