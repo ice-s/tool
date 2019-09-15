@@ -4,8 +4,9 @@ namespace Ices\Tool;
 
 use Ices\Tool\Commands\CrudApiCommand;
 use Ices\Tool\Commands\CrudDestroyCommand;
+use Illuminate\Support\ServiceProvider;
 
-class ToolCrudServiceProvider
+class ToolCrudServiceProvider extends ServiceProvider
 {
     /**
      * Booting the package.
