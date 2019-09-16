@@ -44,12 +44,12 @@ class CrudApiCommand extends Command
     {
         parent::__construct();
 
-        $this->modelPath = app_path('Entities\Models');
+        $this->modelPath = app_path('Entities/Models');
         $this->repoPath = app_path('Repositories');
         $this->servicePath = app_path('Services');
         $this->resourcePath = app_path('Resources');
-        $this->requestPath = app_path('Http\Requests');
-        $this->controllerApiPath = app_path('Http\Controllers\Api');
+        $this->requestPath = app_path('Http/Requests');
+        $this->controllerApiPath = app_path('Http/Controllers/Api');
         $this->routePath = base_path('routes');
     }
 
