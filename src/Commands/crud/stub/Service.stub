@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services{{Path}};
+namespace App\Services{{NameSpace}};
 
-use App\Repositories{{Path}}\{{Name}}Repository;
+use App\Repositories{{NameSpace}}\{{Name}}Repository;
 use App\Services\BaseService;
 
 class {{Name}}Service extends BaseService

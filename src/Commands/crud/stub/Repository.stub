@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Repositories{{Path}};
+namespace App\Repositories{{NameSpace}};
 
-use App\Entities\Models{{Path}}\{{Name}};
+use App\Entities\Models{{NameSpace}}\{{Name}};
 use App\Repositories\BaseRepository;
 
 class {{Name}}Repository extends BaseRepository

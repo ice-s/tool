@@ -12,7 +12,7 @@ class CrudApiCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'crud:make {--name=} {--service=} {--table=}  {--path=} {{--f}}';
+    protected $signature = 'crud:make {--name=} {--table=}  {--path=} {{--f}}';
 
     /**
      * The console command description.
@@ -30,10 +30,10 @@ class CrudApiCommand extends Command
     protected $routePath;
 
     protected $varName;
-    protected $varService;
     protected $varTable;
     protected $varPath;
     protected $varForce = false;
+    protected $varNameSpace;
 
     /**
      * Create a new command instance.
@@ -62,7 +62,8 @@ class CrudApiCommand extends Command
     {
         $this->varName = $this->option('name');
         $this->varTable = $this->option('table');
-        $this->varPath = $this->option('path') ? "\\" . $this->option('path') : '';
+        $this->varPath = $this->option('path') ? "/" . $this->option('path') : '';
+        $this->varNameSpace = $this->option('path') ? '\\' . $this->option('path') : '';
         $this->varForce = $this->option('f');
 
         $this->createBase();
@@ -73,7 +74,7 @@ class CrudApiCommand extends Command
     {
         if (!file_exists($this->modelPath . "/BaseModel.php")) {
             $this->makeDir($this->modelPath);
-            $stubFile = $this->getStub('base\BaseModel.stub');
+            $stubFile = $this->getStub('base/BaseModel.stub');
             $template = file_get_contents($stubFile);
             $template = str_replace([], [], $template);
             file_put_contents($this->modelPath . "/BaseModel.php", $template);
@@ -84,7 +85,7 @@ class CrudApiCommand extends Command
 
         if (!file_exists($this->repoPath . "/BaseRepository.php")) {
             $this->makeDir($this->repoPath);
-            $stubFile = $this->getStub('base\BaseRepository.stub');
+            $stubFile = $this->getStub('base/BaseRepository.stub');
             $template = file_get_contents($stubFile);
             $template = str_replace([], [], $template);
             file_put_contents($this->repoPath . "/BaseRepository.php", $template);
@@ -95,7 +96,7 @@ class CrudApiCommand extends Command
 
         if (!file_exists($this->servicePath . "/BaseService.php")) {
             $this->makeDir($this->servicePath);
-            $stubFile = $this->getStub('base\BaseService.stub');
+            $stubFile = $this->getStub('base/BaseService.stub');
             $template = file_get_contents($stubFile);
             $template = str_replace([], [], $template);
             file_put_contents($this->servicePath . "/BaseService.php", $template);
@@ -106,7 +107,7 @@ class CrudApiCommand extends Command
 
         if (!file_exists($this->resourcePath . "/BaseResource.php")) {
             $this->makeDir($this->resourcePath);
-            $stubFile = $this->getStub('base\BaseResource.stub');
+            $stubFile = $this->getStub('base/BaseResource.stub');
             $template = file_get_contents($stubFile);
             $template = str_replace([], [], $template);
             file_put_contents($this->resourcePath . "/BaseResource.php", $template);
@@ -139,7 +140,7 @@ class CrudApiCommand extends Command
 
         $dataReplace = [
             'Name'  => $this->varName,
-            'Path'  => $this->varPath,
+            'NameSpace'  => $this->varNameSpace,
             'Table' => $this->varTable,
         ];
 
@@ -164,7 +165,7 @@ class CrudApiCommand extends Command
         $template = file_get_contents($stubFile);
         $dataReplace = [
             'Name' => $this->varName,
-            'Path' => $this->varPath,
+            'NameSpace' => $this->varNameSpace,
         ];
         $template = $this->replaceStub($template, $dataReplace);
 
@@ -184,7 +185,7 @@ class CrudApiCommand extends Command
         $dataReplace = [
             'Name' => $this->varName,
             'name' => lcfirst($this->varName),
-            'Path' => $this->varPath,
+            'NameSpace' => $this->varNameSpace,
         ];
         $template = $this->replaceStub($template, $dataReplace);
 
@@ -203,7 +204,7 @@ class CrudApiCommand extends Command
         $template = file_get_contents($stubFile);
         $dataReplace = [
             'Name' => $this->varName,
-            'Path' => $this->varPath,
+            'NameSpace' => $this->varNameSpace,
         ];
         $dataReplace['array'] = $this->getResourceFieldColumns($this->varTable);
 
@@ -225,7 +226,7 @@ class CrudApiCommand extends Command
         $template = file_get_contents($stubFile);
         $dataReplace = [
             'Name' => $this->varName,
-            'Path' => $this->varPath,
+            'NameSpace' => $this->varNameSpace,
         ];
 
         $template = $this->replaceStub($template, $dataReplace);
@@ -247,7 +248,7 @@ class CrudApiCommand extends Command
         $dataReplace = [
             'Name' => $this->varName,
             'name' => lcfirst($this->varName),
-            'Path' => $this->varPath,
+            'NameSpace' => $this->varNameSpace,
         ];
 
         $template = $this->replaceStub($template, $dataReplace);
@@ -280,7 +281,7 @@ class CrudApiCommand extends Command
         $template = file_get_contents($stubFile);
         $dataReplace = [
             'Name' => $this->varName,
-            'Path' => $this->varPath,
+            'NameSpace' => $this->varNameSpace,
             'Controller' => $this->varName . "Controller",
             'prefix' => mb_strtolower($this->varName),
         ];
