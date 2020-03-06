@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Http\Controllers\Web{{NameSpace}};
+
+use App\Http\Controllers\Controller;
+use App\Resources{{NameSpace}}\{{Name}}Resource;
+use App\Services{{NameSpace}}\{{Name}}Service;
+use App\Http\Requests{{NameSpace}}\{{Name}}FormRequest;
+
+class {{Name}}Controller extends Controller
+{
+    protected ${{name}}Service;
+
+    public function __construct({{Name}}Service ${{name}}Service)
+    {
+        $this->{{name}}Service = ${{name}}Service;
+    }
+
+    public function index()
+    {
+        return {{Name}}Resource::collection($this->{{name}}Service->paginate());
+    }
+
+    public function delete($id)
+    {
+        $this->{{name}}Service->delete($id);
+    
+        return [
+            'status' => 200,
+            'message' => $this->{{name}}Service->delete($id)
+        ];
+    }
+
+    public function store({{Name}}FormRequest $request)
+    {
+        $result = $this->{{name}}Service->create($request->all());
+
+        return new {{Name}}Resource($result);
+    }
+
+    public function update({{Name}}FormRequest $request, $id)
+    {
+        $this->{{name}}Service->update($id, $request->all());
+    }
+
+    public function show($id)
+    {
+        return new {{Name}}Resource($this->{{name}}Service->find($id));
+    }
+}

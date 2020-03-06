@@ -1,0 +1,24 @@
+import Index from '../../components/booking/index';
+
+export default [
+    {
+        path: '/booking',
+        name: 'booking.index',
+        component: Index,
+        query: {},
+        meta: {}
+    }, {
+        path: '/booking/create',
+        name: 'booking.create',
+        component: Index,
+        meta: {
+        }
+    }, {
+        path: '/booking/:id/edit',
+        name: 'booking.edit',
+        component: Index,
+        meta: {
+
+        }
+    }
+];

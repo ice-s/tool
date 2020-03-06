@@ -4,6 +4,7 @@ namespace Ices\Tool\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class CrudApiCommand extends Command
 {
@@ -12,7 +13,7 @@ class CrudApiCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'crud:make {--name=} {--table=}  {--path=} {{--f}}';
+    protected $signature = 'crud:make {--table=} {--name=} {--path=} {{--f}} {{--api}} {{--web}}';
 
     /**
      * The console command description.
@@ -27,14 +28,20 @@ class CrudApiCommand extends Command
     protected $resourcePath;
     protected $requestPath;
     protected $controllerApiPath;
-    protected $routePath;
+    protected $controllerWebPath;
+    protected $routeApiPath;
+    protected $routeWebPath;
 
     protected $varName;
     protected $varTable;
     protected $varPath;
     protected $varForce = false;
+    protected $varApi = false;
+    protected $varWeb = false;
     protected $varNameSpace;
 
+    protected $apiNameSpace = "Api";
+    protected $webNameSpace = "Web";
     /**
      * Create a new command instance.
      *
@@ -50,7 +57,9 @@ class CrudApiCommand extends Command
         $this->resourcePath = app_path('Resources');
         $this->requestPath = app_path('Http/Requests');
         $this->controllerApiPath = app_path('Http/Controllers/Api');
-        $this->routePath = base_path('routes');
+        $this->controllerWebPath = app_path('Http/Controllers/Web');
+        $this->routeApiPath = base_path('routes/Api');
+        $this->routeWebPath = base_path('routes/Web');
     }
 
     /**
@@ -65,6 +74,8 @@ class CrudApiCommand extends Command
         $this->varPath = $this->option('path') ? "/" . $this->option('path') : '';
         $this->varNameSpace = $this->option('path') ? '\\' . $this->option('path') : '';
         $this->varForce = $this->option('f');
+        $this->varApi = $this->option('api');
+        $this->varWeb = $this->option('web');
 
         $this->createBase();
         $this->create();
@@ -123,11 +134,19 @@ class CrudApiCommand extends Command
             $this->createModal();
             $this->createRepository();
             $this->createService();
-            $this->createResource();
-            $this->createRequest();
-            $this->createAuthController();
-            $this->createController();
-            $this->createRoute();
+            if($this->varApi) {
+                $this->createResource();
+                $this->createRequest();
+                $this->createAuthController();
+                $this->createApiController();
+                $this->createApiRoute();
+            }
+
+            if($this->varWeb) {
+                $this->createWebController();
+                $this->createWebRoute();
+            }
+
         } else {
             $this->error('Nothing to crud');
         }
@@ -200,7 +219,7 @@ class CrudApiCommand extends Command
 
     public function createResource()
     {
-        $stubFile = $this->getStub('Resource.stub');
+        $stubFile = $this->getStub('api/Resource.stub');
         $template = file_get_contents($stubFile);
         $dataReplace = [
             'Name' => $this->varName,
@@ -222,7 +241,7 @@ class CrudApiCommand extends Command
 
     public function createRequest()
     {
-        $stubFile = $this->getStub('Request.stub');
+        $stubFile = $this->getStub('api/Request.stub');
         $template = file_get_contents($stubFile);
         $dataReplace = [
             'Name' => $this->varName,
@@ -241,9 +260,9 @@ class CrudApiCommand extends Command
         }
     }
 
-    public function createController()
+    public function createApiController()
     {
-        $stubFile = $this->getStub('Controller.stub');
+        $stubFile = $this->getStub('api/Controller.stub');
         $template = file_get_contents($stubFile);
         $dataReplace = [
             'Name' => $this->varName,
@@ -262,9 +281,30 @@ class CrudApiCommand extends Command
         }
     }
 
+    public function createWebController()
+    {
+        $stubFile = $this->getStub('web/Controller.stub');
+        $template = file_get_contents($stubFile);
+        $dataReplace = [
+            'Name' => $this->varName,
+            'name' => lcfirst($this->varName),
+            'NameSpace' => $this->varNameSpace,
+        ];
+
+        $template = $this->replaceStub($template, $dataReplace);
+        if (!file_exists($this->controllerWebPath . $this->varPath . "/" . $this->varName . "Controller.php") || $this->varForce) {
+            $this->makeDir($this->controllerWebPath . $this->varPath);
+            file_put_contents($this->controllerWebPath . $this->varPath . "/" . $this->varName . "Controller.php",
+                $template);
+            $this->info($this->varPath . "/" . $this->varName . "Controller.php has created");
+        } else {
+            $this->warn($this->varPath . "/" . $this->varName . "Controller.php exist");
+        }
+    }
+
     public function createAuthController()
     {
-        $stubFile = $this->getStub('AuthController.stub');
+        $stubFile = $this->getStub('api/AuthController.stub');
         $template = file_get_contents($stubFile);
 
         if (!file_exists($this->controllerApiPath . "/AuthController.php") || $this->varForce) {
@@ -276,8 +316,8 @@ class CrudApiCommand extends Command
         }
     }
 
-    public function createRoute(){
-        $stubFile = $this->getStub('Route.stub');
+    public function createApiRoute(){
+        $stubFile = $this->getStub('api/Route.stub');
         $template = file_get_contents($stubFile);
         $dataReplace = [
             'Name' => $this->varName,
@@ -287,14 +327,40 @@ class CrudApiCommand extends Command
         ];
 
         $template = $this->replaceStub($template, $dataReplace);
-        if (!file_exists($this->routePath . $this->varPath . "/" . $this->varName . ".php") || $this->varForce) {
-            $this->makeDir($this->routePath . $this->varPath);
-            file_put_contents($this->routePath . $this->varPath . "/" . $this->varName . ".php",
+        if (!file_exists($this->routeApiPath . $this->varPath . "/" . $this->varName . ".php") || $this->varForce) {
+            $this->makeDir($this->routeApiPath . $this->varPath);
+            file_put_contents($this->routeApiPath . $this->varPath . "/" . $this->varName . ".php",
                 $template);
             $this->info($this->varPath . "/" . $this->varName . ".php has created");
         } else {
             $this->warn($this->varPath . "/" . $this->varName . ".php exist");
         }
+
+        File::append(base_path('routes/api.php'),
+            "Route::group(['middleware' => 'jwt.auth'], function () {\n    " . 'Routes\Api' . $this->varNameSpace . '\\' . $this->varName . "::route();\n});\n");
+    }
+
+    public function createWebRoute(){
+        $stubFile = $this->getStub('web/Route.stub');
+        $template = file_get_contents($stubFile);
+        $dataReplace = [
+            'Name' => $this->varName,
+            'NameSpace' => $this->varNameSpace,
+            'Controller' => $this->varName . "Controller",
+            'prefix' => mb_strtolower($this->varName),
+        ];
+
+        $template = $this->replaceStub($template, $dataReplace);
+        if (!file_exists($this->routeWebPath . $this->varPath . "/" . $this->varName . ".php") || $this->varForce) {
+            $this->makeDir($this->routeWebPath . $this->varPath);
+            file_put_contents($this->routeWebPath . $this->varPath . "/" . $this->varName . ".php",
+                $template);
+            $this->info($this->varPath . "/" . $this->varName . ".php has created");
+        } else {
+            $this->warn($this->varPath . "/" . $this->varName . ".php exist");
+        }
+
+        File::append(base_path('routes/web.php'), 'Routes\Web' . $this->varNameSpace . '\\' . $this->varName. "::route();\n");
     }
 
     public function getFillableColumns($table)

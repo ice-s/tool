@@ -4,6 +4,7 @@ namespace Ices\Tool;
 
 use Ices\Tool\Commands\CrudApiCommand;
 use Ices\Tool\Commands\CrudDestroyCommand;
+use Ices\Tool\Commands\CrudFrontendCommand;
 use Illuminate\Support\ServiceProvider;
 
 class ToolCrudServiceProvider extends ServiceProvider
@@ -13,7 +14,9 @@ class ToolCrudServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $this->loadViewsFrom(__DIR__ . '/views', 'CRUD');
 
+        $this->app->register(RouteCrudServiceProvider::class);
     }
 
     /**
@@ -29,6 +32,7 @@ class ToolCrudServiceProvider extends ServiceProvider
         $this->commands([
             CrudApiCommand::class,
             CrudDestroyCommand::class,
+            CrudFrontendCommand::class,
         ]);
     }
 }

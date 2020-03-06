@@ -1,6 +1,6 @@
 <?php
 
-namespace Routes{{NameSpace}};
+namespace Routes\Api{{NameSpace}};
 
 use Illuminate\Support\Facades\Route;
 

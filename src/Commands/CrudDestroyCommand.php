@@ -34,8 +34,12 @@ class CrudDestroyCommand extends Command
         $this->deleteDir(app_path("/Services"));
         $this->deleteDir(app_path("/Resources"));
         $this->deleteDir(app_path("/Repositories"));
-        $this->deleteDir(app_path("/Http/Controllers/Api"));
         $this->deleteDir(app_path("/Http/Requests"));
+
+        $this->deleteDir(app_path("/Http/Controllers/Api"));
+        $this->deleteDir(app_path("/Http/Controllers/Web"));
+        $this->deleteDir(base_path('routes/Web'));
+        $this->deleteDir(base_path('routes/Api'));
     }
 
     public function deleteDir($dirPath)
