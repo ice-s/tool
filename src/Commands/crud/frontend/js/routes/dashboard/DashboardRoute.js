@@ -2,10 +2,12 @@ import Dashboard from '../../components/dashboard/Dashboard';
 
 export default [
     {
-        path: '/',
+        path: '/dashboard',
         name: 'dashboard.index',
         component: Dashboard,
         query: {},
-        meta: {}
+        meta: {
+            auth: true
+        }
     }
 ];

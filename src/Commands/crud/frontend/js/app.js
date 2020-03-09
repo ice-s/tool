@@ -8,6 +8,7 @@ import i18n from './lang/i18n';
 import VueAxios from 'vue-axios';
 import VueRouter from 'vue-router';
 import Route from './routes/routes';
+import mixins from './mixins/mixins';
 
 Vue.use(VueRouter);
 Vue.use(VueAxios, axios);
@@ -31,5 +32,7 @@ App.router.beforeEach((to, from, next) => {
     App.i18n.locale = 'en';
     next();
 });
+
+Vue.mixin(mixins);
 
 new Vue(App).$mount('#app');

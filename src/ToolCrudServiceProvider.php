@@ -2,9 +2,9 @@
 
 namespace Ices\Tool;
 
-use Ices\Tool\Commands\CrudApiCommand;
 use Ices\Tool\Commands\CrudDestroyCommand;
 use Ices\Tool\Commands\CrudFrontendCommand;
+use Ices\Tool\Commands\CrudMakeCommand;
 use Illuminate\Support\ServiceProvider;
 
 class ToolCrudServiceProvider extends ServiceProvider
@@ -30,9 +30,8 @@ class ToolCrudServiceProvider extends ServiceProvider
     function registerCommands()
     {
         $this->commands([
-            CrudApiCommand::class,
-            CrudDestroyCommand::class,
-            CrudFrontendCommand::class,
+            CrudMakeCommand::class,
+            CrudDestroyCommand::class
         ]);
     }
 }

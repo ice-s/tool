@@ -12,7 +12,7 @@
         },
         created() {
             let app = this;
-            app.$router.push({'name': 'dashboard'});
+            app.$router.push({'name': 'dashboard.index'});
         }
     };
 </script>
