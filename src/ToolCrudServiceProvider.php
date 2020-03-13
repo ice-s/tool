@@ -15,8 +15,6 @@ class ToolCrudServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadViewsFrom(__DIR__ . '/views', 'CRUD');
-
-        $this->app->register(RouteCrudServiceProvider::class);
     }
 
     /**
@@ -24,6 +22,7 @@ class ToolCrudServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->app->register(RouteCrudServiceProvider::class);
         $this->registerCommands();
     }
 

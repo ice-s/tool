@@ -1,27 +1,11 @@
 <?php
 
-namespace Ices\Tool\Commands;
+namespace Ices\Tool\Service;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
-class CrudMakeCommand extends Command
+class GenerateService
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'crud:make {--auth} {--table=} {--name=} {--path=} {{--f}} {{--api}}';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Command description';
-
     protected $modelPath;
     protected $repoPath;
     protected $servicePath;
@@ -33,6 +17,7 @@ class CrudMakeCommand extends Command
     protected $routeWebPath;
     protected $frontendComponentsPath;
     protected $frontendRoutesPath;
+    protected $columns;
 
     protected $varName;
     protected $varTable;
@@ -46,15 +31,8 @@ class CrudMakeCommand extends Command
     protected $apiNameSpace = "Api";
     protected $webNameSpace = "Web";
 
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
-        parent::__construct();
-
         $this->modelPath             = app_path('Entities/Models');
         $this->repoPath              = app_path('Repositories');
         $this->servicePath           = app_path('Services');
@@ -68,12 +46,23 @@ class CrudMakeCommand extends Command
         $this->frontendRoutesPath     = resource_path('js/routes');
     }
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
+    public function generateAuth()
+    {
+        $this->varAuth = true;
+        $this->createAuth();
+    }
+
+    public function generate($name, $columns, $table)
+    {
+        $this->varName = $name;
+        $this->columns = $columns;
+        $this->varTable = $table;
+        $this->varForce = true;
+        $this->createBase();
+        $this->create();
+    }
+
+    public function setUp()
     {
         $this->varName      = $this->option('name');
         $this->varTable     = $this->option('table');
@@ -81,9 +70,6 @@ class CrudMakeCommand extends Command
         $this->varNameSpace = $this->option('path') ? '\\' . $this->option('path') : '';
         $this->varForce     = $this->option('f');
         $this->varAuth      = $this->option('auth');
-
-        $this->createBase();
-        $this->create();
     }
 
     protected function createBase()
@@ -94,9 +80,6 @@ class CrudMakeCommand extends Command
             $template = file_get_contents($stubFile);
             $template = str_replace([], [], $template);
             file_put_contents($this->modelPath . "/BaseModel.php", $template);
-            $this->info('Create new BaseModel');
-        } else {
-            $this->warn('BaseModel exist!');
         }
 
         if (!file_exists($this->repoPath . "/BaseRepository.php")) {
@@ -105,9 +88,6 @@ class CrudMakeCommand extends Command
             $template = file_get_contents($stubFile);
             $template = str_replace([], [], $template);
             file_put_contents($this->repoPath . "/BaseRepository.php", $template);
-            $this->info('Create new BaseRepository');
-        } else {
-            $this->warn('BaseRepository exist!');
         }
 
         if (!file_exists($this->servicePath . "/BaseService.php")) {
@@ -116,9 +96,6 @@ class CrudMakeCommand extends Command
             $template = file_get_contents($stubFile);
             $template = str_replace([], [], $template);
             file_put_contents($this->servicePath . "/BaseService.php", $template);
-            $this->info('Create new BaseService');
-        } else {
-            $this->warn('BaseService exist!');
         }
 
         if (!file_exists($this->resourcePath . "/BaseResource.php")) {
@@ -127,19 +104,19 @@ class CrudMakeCommand extends Command
             $template = file_get_contents($stubFile);
             $template = str_replace([], [], $template);
             file_put_contents($this->resourcePath . "/BaseResource.php", $template);
-            $this->info('Create new BaseResource');
-        } else {
-            $this->warn('BaseResource exist!');
         }
     }
 
-    public function create()
+    public function createAuth()
     {
         if ($this->varAuth) {
             $this->createAuthController();
             $this->makeFrontendAuth();
         }
+    }
 
+    public function create()
+    {
         if ($this->varName) {
             $this->createModal();
             $this->createRepository();
@@ -167,7 +144,7 @@ class CrudMakeCommand extends Command
         ];
 
         if ($this->varTable) {
-            $dataReplace['fillable'] = $this->getFillableColumns($this->varTable);
+            $dataReplace['fillable'] = $this->getFillableColumns();
         }
 
         $template = $this->replaceStub($template, $dataReplace);
@@ -175,9 +152,6 @@ class CrudMakeCommand extends Command
         if (!file_exists($this->modelPath . $this->varPath . "/" . $this->varName . ".php") || $this->varForce) {
             $this->makeDir($this->modelPath . $this->varPath);
             file_put_contents($this->modelPath . $this->varPath . "/" . $this->varName . ".php", $template);
-            $this->info($this->varPath . "/" . $this->varName . ".php has created");
-        } else {
-            $this->warn($this->varPath . "/" . $this->varName . ".php exist");
         }
     }
 
@@ -194,9 +168,6 @@ class CrudMakeCommand extends Command
         if (!file_exists($this->repoPath . $this->varPath . "/" . $this->varName . "Repository.php") || $this->varForce) {
             $this->makeDir($this->repoPath . $this->varPath);
             file_put_contents($this->repoPath . $this->varPath . "/" . $this->varName . "Repository.php", $template);
-            $this->info($this->varPath . "/" . $this->varName . "Repository.php has created");
-        } else {
-            $this->warn($this->varPath . "/" . $this->varName . "Repository.php exist");
         }
     }
 
@@ -214,9 +185,6 @@ class CrudMakeCommand extends Command
         if (!file_exists($this->servicePath . $this->varPath . "/" . $this->varName . "Service.php") || $this->varForce) {
             $this->makeDir($this->servicePath . $this->varPath);
             file_put_contents($this->servicePath . $this->varPath . "/" . $this->varName . "Service.php", $template);
-            $this->info($this->varPath . "/" . $this->varName . "Service.php has created");
-        } else {
-            $this->warn($this->varPath . "/" . $this->varName . "Service.php exist");
         }
     }
 
@@ -228,16 +196,13 @@ class CrudMakeCommand extends Command
             'Name'      => $this->varName,
             'NameSpace' => $this->varNameSpace,
         ];
-        $dataReplace['array'] = $this->getResourceFieldColumns($this->varTable);
+        $dataReplace['array'] = $this->getResourceFieldColumns();
 
         $template = $this->replaceStub($template, $dataReplace);
 
         if (!file_exists($this->resourcePath . $this->varPath . "/" . $this->varName . "Resource.php") || $this->varForce) {
             $this->makeDir($this->resourcePath . $this->varPath);
             file_put_contents($this->resourcePath . $this->varPath . "/" . $this->varName . "Resource.php", $template);
-            $this->info($this->varPath . "/" . $this->varName . "Resource.php has created");
-        } else {
-            $this->warn($this->varPath . "/" . $this->varName . "Resource.php exist");
         }
 
     }
@@ -257,9 +222,6 @@ class CrudMakeCommand extends Command
             $this->makeDir($this->requestPath . $this->varPath);
             file_put_contents($this->requestPath . $this->varPath . "/" . $this->varName . "FormRequest.php",
                 $template);
-            $this->info($this->varPath . "/" . $this->varName . "FormRequest.php has created");
-        } else {
-            $this->warn($this->varPath . "/" . $this->varName . "FormRequest.php exist");
         }
     }
 
@@ -278,9 +240,6 @@ class CrudMakeCommand extends Command
             $this->makeDir($this->controllerApiPath . $this->varPath);
             file_put_contents($this->controllerApiPath . $this->varPath . "/" . $this->varName . "Controller.php",
                 $template);
-            $this->info($this->varPath . "/" . $this->varName . "Controller.php has created");
-        } else {
-            $this->warn($this->varPath . "/" . $this->varName . "Controller.php exist");
         }
     }
 
@@ -299,9 +258,6 @@ class CrudMakeCommand extends Command
             $this->makeDir($this->controllerWebPath . $this->varPath);
             file_put_contents($this->controllerWebPath . $this->varPath . "/" . $this->varName . "Controller.php",
                 $template);
-            $this->info($this->varPath . "/" . $this->varName . "Controller.php has created");
-        } else {
-            $this->warn($this->varPath . "/" . $this->varName . "Controller.php exist");
         }
     }
 
@@ -313,9 +269,6 @@ class CrudMakeCommand extends Command
         if (!file_exists($this->controllerApiPath . "/AuthController.php") || $this->varForce) {
             $this->makeDir($this->controllerApiPath);
             file_put_contents($this->controllerApiPath . "/AuthController.php", $template);
-            $this->info("AuthController.php has created");
-        } else {
-            $this->warn("AuthController.php exist");
         }
     }
 
@@ -334,9 +287,6 @@ class CrudMakeCommand extends Command
         if (!file_exists($this->routeApiPath . $this->varPath . "/" . $this->varName . ".php") || $this->varForce) {
             $this->makeDir($this->routeApiPath . $this->varPath);
             file_put_contents($this->routeApiPath . $this->varPath . "/" . $this->varName . ".php", $template);
-            $this->info($this->varPath . "/" . $this->varName . ".php has created");
-        } else {
-            $this->warn($this->varPath . "/" . $this->varName . ".php exist");
         }
 
         File::append(base_path('routes/api.php'),
@@ -358,29 +308,27 @@ class CrudMakeCommand extends Command
         if (!file_exists($this->routeWebPath . $this->varPath . "/" . $this->varName . ".php") || $this->varForce) {
             $this->makeDir($this->routeWebPath . $this->varPath);
             file_put_contents($this->routeWebPath . $this->varPath . "/" . $this->varName . ".php", $template);
-            $this->info($this->varPath . "/" . $this->varName . ".php has created");
-        } else {
-            $this->warn($this->varPath . "/" . $this->varName . ".php exist");
         }
 
         File::append(base_path('routes/web.php'),
             'Routes\Web' . $this->varNameSpace . '\\' . $this->varName . "::route();\n");
     }
 
-    public function getFillableColumns($table)
+    public function getFillableColumns()
     {
-        $cols = DB::getSchemaBuilder()->getColumnListing($table);
-
-        foreach ($cols as &$col) {
-            $col = "\n" . "        '" . $col . "'";
+        $colsArr = [];
+        foreach ($this->columns as $key => $col) {
+            if (isset($col['fillable'])) {
+                $colsArr[] = "\n" . "        '" . $col['name'] . "'";
+            }
         }
 
-        return "[" . implode(',', $cols) . "\n   ]";
+        return "[" . implode(',', $colsArr) . "\n   ]";
     }
 
-    public function getResourceFieldColumns($table)
+    public function getResourceFieldColumns()
     {
-        $cols = DB::getSchemaBuilder()->getColumnListing($table);
+        $cols = array_keys($this->columns);
 
         $arrayString = "[";
         foreach ($cols as $col) {
@@ -400,6 +348,15 @@ class CrudMakeCommand extends Command
         return $stubContent;
     }
 
+    public function replaceStubVue($stubContent, $options = [])
+    {
+        foreach ($options as $replaceSearch => $replaceTo) {
+            $stubContent = str_replace("{{{" . $replaceSearch . "}}}", $replaceTo, $stubContent);
+        }
+
+        return $stubContent;
+    }
+
     /**
      * Get the stub file for the generator.
      *
@@ -407,7 +364,7 @@ class CrudMakeCommand extends Command
      */
     protected function getStub($stubName)
     {
-        return __DIR__ . '/crud/stub/' . $stubName;
+        return __DIR__ . '/../Commands/crud/stub/' . $stubName;
     }
 
     protected function makeDir($folderPath)
@@ -420,74 +377,96 @@ class CrudMakeCommand extends Command
     public function makeFrontendAuth()
     {
         if (!file_exists(resource_path('js/config.js'))) {
-            $this->recurse_copy(__DIR__ . "/crud/frontend/js", resource_path('js'));
-            $this->recurse_copy(__DIR__ . "/crud/frontend/sass", resource_path('sass'));
-            copy(__DIR__ . "/crud/frontend/package.json", base_path('package.json'));
-            copy(__DIR__ . "/crud/frontend/web.php", base_path('routes/web.php'));
-            copy(__DIR__ . "/crud/frontend/welcome.blade.php", resource_path('views/welcome.blade.php'));
-        } else {
-            $this->warn('VueJS exist!');
+            $this->recurse_copy(__DIR__ . "/../Commands/crud/frontend/js", resource_path('js'));
+            $this->recurse_copy(__DIR__ . "/../Commands/crud/frontend/sass", resource_path('sass'));
+            copy(__DIR__ . "/../Commands/crud/frontend/package.json", base_path('package.json'));
+            copy(__DIR__ . "/../Commands/crud/frontend/web.php", base_path('routes/web.php'));
+            copy(__DIR__ . "/../Commands/crud/frontend/welcome.blade.php", resource_path('views/welcome.blade.php'));
         }
     }
 
     public function makeFrontendModule()
     {
-        //TODO
-        $stubCreate = $this->getStub('frontend/component/create.vue.stub');
-        $stubEdit   = $this->getStub('frontend/component/edit.vue.stub');
-        $stubIndex  = $this->getStub('frontend/component/index.vue.stub');
-        $stubRoute  = $this->getStub('frontend/Route.stub');
+        $this->makeVueIndex();
+        $this->makeVueCreate();
+        $this->makeVueEdit();
+        $this->makeVueRoute();
+    }
 
-        $template    = file_get_contents($stubCreate);
-        $dataReplace = [];
-        $template = $this->replaceStub($template, $dataReplace);
-        if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Create.vue") || $this->varForce) {
-            $this->makeDir($this->frontendComponentsPath . "/" . mb_strtolower($this->varName));
-            file_put_contents($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Create.vue", $template);
-            $this->info($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Create.vue has created");
-        } else {
-            $this->warn($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Create.vue exist");
-        }
-
-        $template    = file_get_contents($stubEdit);
-        $dataReplace = [];
-        $template = $this->replaceStub($template, $dataReplace);
-        if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Edit.vue") || $this->varForce) {
-            $this->makeDir($this->frontendComponentsPath . "/" . mb_strtolower($this->varName));
-            file_put_contents($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Edit.vue", $template);
-            $this->info($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Edit.vue has created");
-        } else {
-            $this->warn($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Edit.vue exist");
-        }
-
+    public function makeVueIndex()
+    {
+        $stubIndex   = $this->getStub('frontend/component/index.vue.stub');
         $template    = file_get_contents($stubIndex);
-        $dataReplace = [];
-        $template = $this->replaceStub($template, $dataReplace);
+        $dataReplace = [
+            'displayName'  => $this->varName,
+            'name'         => mb_strtolower($this->varName),
+            'columnHeader' => $this->getVueColumnHeader(),
+            'columnItem'   => $this->getVueColumnItem()
+        ];
+        $template    = $this->replaceStubVue($template, $dataReplace);
         if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Index.vue") || $this->varForce) {
             $this->makeDir($this->frontendComponentsPath . "/" . mb_strtolower($this->varName));
-            file_put_contents($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Index.vue", $template);
-            $this->info($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Index.vue has created");
-        } else {
-            $this->warn($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Index.vue exist");
+            file_put_contents($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Index.vue",
+                $template);
         }
+    }
 
+    public function makeVueCreate()
+    {
+        $stubCreate  = $this->getStub('frontend/component/create.vue.stub');
+        $template    = file_get_contents($stubCreate);
+        $dataReplace = [
+            'displayName' => $this->varName,
+            'name'        => mb_strtolower($this->varName),
+            'form'        => $this->getForm(),
+            'filter'        => $this->getObjectJavaScript(),
+        ];
+        $template    = $this->replaceStubVue($template, $dataReplace);
+        if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Create.vue") || $this->varForce) {
+            $this->makeDir($this->frontendComponentsPath . "/" . mb_strtolower($this->varName));
+            file_put_contents($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Create.vue",
+                $template);
+        }
+    }
+
+    public function makeVueEdit()
+    {
+        $stubEdit = $this->getStub('frontend/component/edit.vue.stub');
+
+
+        $template    = file_get_contents($stubEdit);
+        $dataReplace = [
+            'displayName' => $this->varName,
+            'name'        => mb_strtolower($this->varName),
+            'form'        => $this->getFormEdit(),
+            'filter'        => $this->getObjectJavaScript(),
+        ];
+        $template    = $this->replaceStubVue($template, $dataReplace);
+        if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Edit.vue") || $this->varForce) {
+            $this->makeDir($this->frontendComponentsPath . "/" . mb_strtolower($this->varName));
+            file_put_contents($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Edit.vue",
+                $template);
+        }
+    }
+
+    public function makeVueRoute()
+    {
+        $stubRoute   = $this->getStub('frontend/Route.stub');
         $template    = file_get_contents($stubRoute);
         $dataReplace = [
             'name' => mb_strtolower($this->varName)
         ];
-        $template = $this->replaceStub($template, $dataReplace);
+        $template    = $this->replaceStub($template, $dataReplace);
         if (!file_exists($this->frontendRoutesPath . "/" . mb_strtolower($this->varName) . "/" . $this->varName . ".js") || $this->varForce) {
             $this->makeDir($this->frontendRoutesPath . "/" . mb_strtolower($this->varName));
-            file_put_contents($this->frontendRoutesPath . "/" . mb_strtolower($this->varName) . "/" . $this->varName . ".js", $template);
-            $this->info($this->frontendRoutesPath . "/" . mb_strtolower($this->varName) . "/" . $this->varName . ".js has created");
-        } else {
-            $this->warn($this->frontendRoutesPath . "/" . mb_strtolower($this->varName) . "/" . $this->varName . ".js exist");
+            file_put_contents($this->frontendRoutesPath . "/" . mb_strtolower($this->varName) . "/" . $this->varName . ".js",
+                $template);
         }
 
-        $file_contents    = file_get_contents(resource_path('js/routes/routes.js'));
-        $strRoute = 'import '.$this->varName.' from "./'.mb_strtolower($this->varName).'/' .$this->varName. '";
-routes = [...routes, ...'.$this->varName.'];';
-        $strRouteRep = $strRoute.'
+        $file_contents = file_get_contents(resource_path('js/routes/routes.js'));
+        $strRoute      = 'import ' . $this->varName . ' from "./' . mb_strtolower($this->varName) . '/' . $this->varName . '";
+routes = [...routes, ...' . $this->varName . '];';
+        $strRouteRep   = $strRoute . '
 
 const router';
 
@@ -495,6 +474,210 @@ const router';
         $file_contents = preg_replace("/[\r\n]+/", "\n", $file_contents);
         $file_contents = str_replace("const router", $strRouteRep, $file_contents);
         file_put_contents(resource_path('js/routes/routes.js'), $file_contents);
+    }
+
+    public function getForm(){
+        $str = '';
+        foreach ($this->columns as $col) {
+            if (isset($col['fillable']) && !isset($col['primary'])) {
+                $str .= $this->generateColByType($col['name'], $col['display'], $col['type']);
+            }
+        }
+
+        return $str;
+    }
+
+    public function getFormEdit()
+    {
+        $str = '';
+
+        foreach ($this->columns as $col) {
+            if (isset($col['fillable']) && !isset($col['primary'])) {
+                $str .= $this->generateColEditByType($col['name'], $col['display'], $col['type']);
+            }
+        }
+
+        return $str;
+    }
+
+    public function getObjectJavaScript(){
+        $object = "{";
+        foreach ($this->columns as $col) {
+            if (isset($col['fillable']) && !isset($col['primary'])) {
+                $object .= $col['name']." : app.object.".$col['name'].",";
+            }
+
+        }
+        $object .= "}";
+
+        return $object;
+    }
+
+    public function generateColByType($name, $displayName, $type)
+    {
+        $str = '';
+        switch ($type) {
+            case 'bigint':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'">
+                    </div>
+                </div>';
+                break;
+            case 'int':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'">
+                    </div>
+                </div>';
+                break;
+            case 'string':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="'.$name.'" name="'.$name.'">
+                    </div>
+                </div>';
+                break;
+
+            case 'float':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'">
+                    </div>
+                </div>';
+                break;
+
+            case 'date':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="date" class="form-control" id="'.$name.'" name="'.$name.'">
+                    </div>
+                </div>';
+                break;
+
+            case 'datetime':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="datetime-local" class="form-control" id="'.$name.'" name="'.$name.'">
+                    </div>
+                </div>';
+                break;
+            case 'text':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <textarea class="form-control" id="'.$name.'" name="'.$name.'" rows="3"></textarea>
+                    </div>
+                </div>';
+                break;
+        }
+
+        return $str;
+    }
+
+    public function generateColEditByType($name, $displayName, $type)
+    {
+        $str = '';
+        switch ($type) {
+            case 'bigint':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
+                    </div>
+                </div>';
+                break;
+            case 'int':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'">
+                    </div>
+                </div>';
+                break;
+            case 'string':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
+                    </div>
+                </div>';
+                break;
+
+            case 'float':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
+                    </div>
+                </div>';
+                break;
+
+            case 'date':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="date" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
+                    </div>
+                </div>';
+                break;
+
+            case 'datetime':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <input type="datetime-local" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
+                    </div>
+                </div>';
+                break;
+            case 'text':
+                $str = "\n".'<div class="form-group row">
+                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                    <div class="col-sm-10">
+                        <textarea class="form-control" id="'.$name.'" name="'.$name.'" rows="3" v-model="object.' . $name . '"></textarea>
+                    </div>
+                </div>';
+                break;
+        }
+
+        return $str;
+    }
+
+    public function getVueColumnHeader()
+    {
+        $str   = '';
+        $first = true;
+        foreach ($this->columns as $col) {
+            if (!$first) {
+                $str .= "\n" . str_repeat(' ', 40);
+            }
+            $str .= "<td>" . $col['display'] . '</td>';
+
+            $first = false;
+        }
+
+        return $str;
+    }
+
+    public function getVueColumnItem()
+    {
+        $str   = '';
+        $first = true;
+        foreach ($this->columns as $key => $col) {
+            if (!$first) {
+                $str .= "\n" . str_repeat(' ', 40);
+            }
+            $str   .= '<td>{{ item.' . $col['name'] . ' }}</td>';
+            $first = false;
+        }
+
+        return $str;
     }
 
     function recurse_copy($src, $dst)
