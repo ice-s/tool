@@ -2,7 +2,7 @@
   "name": "ice-s/tool",
   "description": "Tool",
   "type": "php",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "authors": [
     {
       "name": "ice-s",
@@ -21,7 +21,7 @@
   "extra": {
     "laravel": {
       "providers": [
-        "Ices\\Tool\\RouteServiceProvider"
+        "Ices\\Tool\\ToolCrudServiceProvider"
       ]
     }
   }
