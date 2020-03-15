@@ -521,7 +521,7 @@ const router';
                 $str = "\n".'<div class="form-group row">
                     <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
                     <div class="col-sm-10">
-                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'">
+                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
                     </div>
                 </div>';
                 break;
@@ -529,7 +529,7 @@ const router';
                 $str = "\n".'<div class="form-group row">
                     <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
                     <div class="col-sm-10">
-                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'">
+                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
                     </div>
                 </div>';
                 break;
@@ -537,7 +537,7 @@ const router';
                 $str = "\n".'<div class="form-group row">
                     <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="'.$name.'" name="'.$name.'">
+                        <input type="text" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
                     </div>
                 </div>';
                 break;
@@ -546,7 +546,7 @@ const router';
                 $str = "\n".'<div class="form-group row">
                     <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
                     <div class="col-sm-10">
-                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'">
+                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
                     </div>
                 </div>';
                 break;
@@ -555,7 +555,7 @@ const router';
                 $str = "\n".'<div class="form-group row">
                     <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
                     <div class="col-sm-10">
-                        <input type="date" class="form-control" id="'.$name.'" name="'.$name.'">
+                        <input type="date" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
                     </div>
                 </div>';
                 break;
@@ -564,7 +564,7 @@ const router';
                 $str = "\n".'<div class="form-group row">
                     <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
                     <div class="col-sm-10">
-                        <input type="datetime-local" class="form-control" id="'.$name.'" name="'.$name.'">
+                        <input type="datetime-local" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
                     </div>
                 </div>';
                 break;
@@ -572,7 +572,7 @@ const router';
                 $str = "\n".'<div class="form-group row">
                     <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
                     <div class="col-sm-10">
-                        <textarea class="form-control" id="'.$name.'" name="'.$name.'" rows="3"></textarea>
+                        <textarea class="form-control" id="'.$name.'" name="'.$name.'" rows="3" v-model="object.' . $name . '"></textarea>
                     </div>
                 </div>';
                 break;
@@ -597,7 +597,7 @@ const router';
                 $str = "\n".'<div class="form-group row">
                     <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
                     <div class="col-sm-10">
-                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'">
+                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
                     </div>
                 </div>';
                 break;

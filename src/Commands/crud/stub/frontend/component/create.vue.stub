@@ -59,6 +59,7 @@
             submit() {
                 let app = this;
                 app.isSubmit = true;
+
                 this._httpRequest.post('/{{{name}}}', {{{filter}}})
                 .then(function (resp) {
                     app.isSubmit = false;
