@@ -25,6 +25,10 @@ class TableController extends Controller
     {
         $table = $request->get('table');
 
+        if (!$table) {
+            return view('CRUD::tables.load');
+        }
+
         $assign['cols'] = [];
 
         if ($table) {
@@ -44,7 +48,7 @@ class TableController extends Controller
     {
         $modelName = $request->get('model_name');
         $table = $request->get('table');
-        $columns   = $request->get('cols');
+        $columns = $request->get('cols');
         if ($request->get('hasAuth')) {
             $this->generateService->generateAuth();
         }
