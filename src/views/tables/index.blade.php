@@ -6,9 +6,13 @@
         <form action="{{route('crud.generate')}}" method="POST">
             <div class="row">
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Table Name</label>
-                        <input type="text" class="form-control" name="table" value="{{ request('table')?? null }}" required>
+                    <div class="form-group bmd-form-group is-filled">
+                        <label for="exampleSelect1" class="bmd-label-floating required" >Table Name</label>
+                        <select class="form-control" id="tables" name="table" required>
+                            @foreach($tables as $table)
+                                <option value="{{$table}}" @if(request('table') == $table) selected @endif>{{$table}}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             </div>
@@ -25,11 +29,38 @@
                         <input type="text" class="form-control" name="model_path">
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-2">
                     <div class="form-group">
                         <div class="checkbox">
                             <label>
                                 <input type="checkbox" name="hasAuth"> Auth
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="hasSoftDelete" checked> Soft Delete
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="hasOverride" checked> Override file
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="hasMockData" checked> Mock Data
                             </label>
                         </div>
                     </div>
@@ -45,6 +76,7 @@
                         <th class="th-sm"><strong>Type</strong></th>
                         <th class="th-sm"><strong>Primary</strong></th>
                         <th class="th-sm"><strong>Fillable</strong></th>
+                        <th class="th-sm"><strong>Filter</strong></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,6 +111,13 @@
                                 </label>
                             </div>
                         </td>
+                        <td class="text-center">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"  name="cols[{{$key}}][filter]" value="1" checked>
+                                </label>
+                            </div>
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -89,3 +128,14 @@
         </form>
     </div>
 @endsection
+@section('pagescript')
+    <script>
+        $(document).ready(function () {
+            $("#tables").on('change', function(e){
+                e.preventDefault();
+                var value = $(this).val();
+                window.location = '/crud?table='+value;
+            });
+        })
+    </script>
+@stop

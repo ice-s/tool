@@ -10,6 +10,10 @@ import VueAxios from 'vue-axios';
 import VueRouter from 'vue-router';
 import Route from './routes/routes';
 import mixins from './mixins/mixins';
+import Paginate from 'vuejs-paginate';
+import './filters/AppFilter';
+
+Vue.component('paginate', Paginate);
 
 Vue.use(VueRouter);
 Vue.use(VueAxios, axios);

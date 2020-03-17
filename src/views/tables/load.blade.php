@@ -5,9 +5,13 @@
         <form action="{{route('crud.table-view')}}" method="get">
             <div class="row">
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Table Name</label>
-                        <input type="text" class="form-control" name="table" value="{{ request('table')?? null }}" required>
+                    <div class="form-group bmd-form-group is-filled">
+                        <label for="exampleSelect1" class="bmd-label-floating required" >Table Name</label>
+                        <select class="form-control" id="exampleSelect1" name="table" required>
+                            @foreach($tables as $table)
+                                <option value="{{$table}}" @if(request('table') == $table) selected @endif>{{$table}}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             </div>

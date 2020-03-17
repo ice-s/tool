@@ -391,6 +391,7 @@ class GenerateService
         $this->makeVueCreate();
         $this->makeVueEdit();
         $this->makeVueRoute();
+        $this->makeVueNav();
     }
 
     public function makeVueIndex()
@@ -401,7 +402,8 @@ class GenerateService
             'displayName'  => $this->varName,
             'name'         => mb_strtolower($this->varName),
             'columnHeader' => $this->getVueColumnHeader(),
-            'columnItem'   => $this->getVueColumnItem()
+            'columnItem'   => $this->getVueColumnItem(),
+            'filterTable'   => $this->getVueFilterTable()
         ];
         $template    = $this->replaceStubVue($template, $dataReplace);
         if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Index.vue") || $this->varForce) {
@@ -476,6 +478,22 @@ const router';
         file_put_contents(resource_path('js/routes/routes.js'), $file_contents);
     }
 
+    public function makeVueNav()
+    {
+        $navRoute      = $this->getStub('frontend/component/nav.vue.stub');
+        $template    = file_get_contents($navRoute);
+        $dataReplace   = [
+            'displayName' => $this->varName,
+            'name'        => mb_strtolower($this->varName),
+        ];
+        $template      = $this->replaceStubVue($template, $dataReplace);
+        $file_contents = file_get_contents(resource_path('js/components/__common/Nav.vue'));
+        $file_contents = str_replace($template, '', $file_contents);
+        $file_contents = str_replace("        </ul>", $template . "        </ul>", $file_contents);
+
+        file_put_contents(resource_path('js/components/__common/Nav.vue'), $file_contents);
+    }
+
     public function getForm(){
         $str = '';
         foreach ($this->columns as $col) {
@@ -525,7 +543,7 @@ const router';
                     </div>
                 </div>';
                 break;
-            case 'int':
+            case 'integer':
                 $str = "\n".'<div class="form-group row">
                     <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
                     <div class="col-sm-10">
@@ -586,65 +604,44 @@ const router';
         $str = '';
         switch ($type) {
             case 'bigint':
-                $str = "\n".'<div class="form-group row">
-                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
-                    <div class="col-sm-10">
-                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
-                    </div>
-                </div>';
+                $htmlType = 'number';
                 break;
-            case 'int':
-                $str = "\n".'<div class="form-group row">
-                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
-                    <div class="col-sm-10">
-                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
-                    </div>
-                </div>';
+            case 'integer':
+                $htmlType = 'number';
                 break;
             case 'string':
-                $str = "\n".'<div class="form-group row">
-                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
-                    <div class="col-sm-10">
-                        <input type="text" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
-                    </div>
-                </div>';
+                $htmlType = 'text';
                 break;
-
             case 'float':
-                $str = "\n".'<div class="form-group row">
-                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
-                    <div class="col-sm-10">
-                        <input type="number" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
-                    </div>
-                </div>';
+                $htmlType = 'number';
                 break;
-
             case 'date':
-                $str = "\n".'<div class="form-group row">
-                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
-                    <div class="col-sm-10">
-                        <input type="date" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
-                    </div>
-                </div>';
+                $htmlType = 'date';
                 break;
 
             case 'datetime':
-                $str = "\n".'<div class="form-group row">
-                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
-                    <div class="col-sm-10">
-                        <input type="datetime-local" class="form-control" id="'.$name.'" name="'.$name.'" v-model="object.' . $name . '">
-                    </div>
-                </div>';
+                $htmlType = 'datetime-local';
                 break;
             case 'text':
-                $str = "\n".'<div class="form-group row">
-                    <label for="'.$name.'" class="col-sm-2 col-form-label">'.$displayName.'</label>
+                $str = "\n" . '<div class="form-group row">
+                    <label for="' . $name . '" class="col-sm-2 col-form-label">' . $displayName . '</label>
                     <div class="col-sm-10">
-                        <textarea class="form-control" id="'.$name.'" name="'.$name.'" rows="3" v-model="object.' . $name . '"></textarea>
+                        <textarea class="form-control" id="' . $name . '" name="' . $name . '" rows="3" v-model="object.' . $name . '"></textarea>
                     </div>
                 </div>';
                 break;
         }
+
+        if ($str) {
+            return $str;
+        }
+
+        $str = "\n" . '<div class="form-group row">
+                    <label for="' . $name . '" class="col-sm-2 col-form-label">' . $displayName . '</label>
+                    <div class="col-sm-10">
+                        <input type="' . $htmlType . '" class="form-control" id="' . $name . '" name="' . $name . '" v-model="object.' . $name . '">
+                    </div>
+                </div>';
 
         return $str;
     }
@@ -673,8 +670,44 @@ const router';
             if (!$first) {
                 $str .= "\n" . str_repeat(' ', 40);
             }
-            $str   .= '<td>{{ item.' . $col['name'] . ' }}</td>';
+            $filter = "";
+            if ($col['type'] == 'date') {
+                $filter = " | formatDate ";
+            }
+
+            if ($col['type'] == 'datetime') {
+                $filter = " | formatDateTime ";
+            }
+
+            $str   .= '<td>{{ item.' . $col['name'] . $filter.' }}</td>';
             $first = false;
+        }
+
+        return $str;
+    }
+
+    public function getVueFilterTable()
+    {
+        $str   = '';
+        foreach ($this->columns as $key => $col) {
+            if (isset($col['filter'])) {
+                $type = 'text';
+                $width = '2';
+                if (in_array($col['type'], ['bigint', 'integer', 'float'])) {
+                    $type = 'number';
+                }
+
+                if (in_array($col['type'], ['date', 'datetime'])) {
+                    $type = 'date';
+                }
+
+                $str .= str_repeat(' ', 24) . '<div class="col-12 col-sm-' . $width . '">
+                            <div class="form-group">
+                                <label>' . $col['display'] . '</label>
+                                <input type="' . $type . '" class="form-control" v-model="form.' . $col['name'] . '">
+                            </div>
+                        </div>' . "\n";
+            }
         }
 
         return $str;

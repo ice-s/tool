@@ -1,6 +1,6 @@
             <li class="nav-item">
                 <router-link tag="a" to="/{{{name}}}" class="nav-link">
-                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                    <i class="nav-icon fas fa-align-justify"></i>
                     <p>{{{displayName}}}</p>
                 </router-link>
             </li>

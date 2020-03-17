@@ -24,12 +24,12 @@ class TableController extends Controller
     public function index(Request $request)
     {
         $table = $request->get('table');
+        $assign['cols'] = [];
+        $assign['tables'] = DB::connection()->getDoctrineSchemaManager()->listTableNames();
 
         if (!$table) {
-            return view('CRUD::tables.load');
+            return view('CRUD::tables.load', $assign);
         }
-
-        $assign['cols'] = [];
 
         if ($table) {
             $cols = DB::getSchemaBuilder()->getColumnListing($table);

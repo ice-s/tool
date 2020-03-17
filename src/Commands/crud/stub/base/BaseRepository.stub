@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Entities\Models\BaseModel;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 abstract class BaseRepository
 {
@@ -11,6 +12,8 @@ abstract class BaseRepository
      * @var Builder
      */
     protected $model;
+
+    protected $all_columns;
 
     public function __construct()
     {
@@ -109,5 +112,80 @@ abstract class BaseRepository
     public function paginate($limit, $option = [])
     {
         return $this->model->paginate($limit);
+    }
+
+
+    public function whereBuilder($conditions, Builder $builder)
+    {
+        if ($conditions instanceof Collection) {
+            $conditions = $conditions->filter(function ($value, $key) {
+                return (empty($value) && $value !== '0') ? false : true;
+            })->all();
+        }
+
+        foreach ($conditions as $field => $value) {
+            if (is_array($value) && !empty($value) && count($value) > 2) {
+                list($field, $condition, $val) = $value;
+                if (!$this->isFillable($field)) {
+                    continue;
+                }
+                $builder = $builder->where($field, $condition, $val);
+            } else {
+                if (!$this->isFillable($field)) {
+                    continue;
+                }
+                $builder = $builder->where($field, '=', $value);
+            }
+        }
+
+        return $builder;
+    }
+
+    public function orderBuilder($sorts, Builder $builder)
+    {
+        $fillables = $this->getFillable();
+
+        if (empty($sorts) && in_array('id', $fillables)) {
+            $sorts = ['id' => 'DESC'];
+        }
+
+        if (isset($sorts) AND !empty($sorts)) {
+            foreach ($sorts as $k => $v) {
+                if (!in_array($k, $fillables)) {
+                    continue;
+                }
+                $builder = $builder->orderBy($k, $v);
+            }
+        }
+
+        return $builder;
+    }
+
+    public function getFillable()
+    {
+        $fillables  = $this->model->getFillable();
+        $primaryKey = $this->model->getKeyName();
+        $createdAt  = $this->model->getCreatedAtColumn();
+        $updatedAt  = $this->model->getUpdatedAtColumn();
+        if (!in_array($primaryKey, $fillables)) {
+            array_push($fillables, $primaryKey, $createdAt, $updatedAt);
+        }
+
+        $this->all_columns = $fillables;
+
+        return $fillables;
+    }
+
+    public function isFillable($key)
+    {
+        if (!$this->all_columns) {
+            $this->getFillable();
+        }
+
+        if (!in_array($key, $this->all_columns)) {
+            return false;
+        }
+
+        return true;
     }
 }
