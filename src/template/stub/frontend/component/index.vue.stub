@@ -1,0 +1,215 @@
+<template>
+    <div>
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-12">
+                        <h1 class="m-0 text-dark">{{{displayName}}}</h1>
+                    </div>
+                    <div class="col-sm-12">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item active">{{{displayName}}}</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="card p-3">
+                    <div class="row">
+                        <div id="builder"></div>
+                    </div>
+                    <div class="row">
+                         <div class="col-12 col-sm-2">
+                              <div class="form-group">
+                                  <button type="button" class="btn bg-gradient-primary" v-on:click="search">Search</button>
+                              </div>
+                         </div>
+                    </div>
+                 </div>
+            </div>
+        </div>
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <router-link :to="{ name: 'cp.admin.{{{name}}}.create' }" class="btn bg-gradient-success btn-small">
+                                        New
+                                    </router-link>
+                                </h3>
+                                <div class="card-tools">
+                                    <span>Total Item: {{meta.total}}</span>
+                                </div>
+                            </div>
+                            <div class="card-body table-responsive p-0">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        {{{columnHeader}}}
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr v-for="item, index in list">
+                                        {{{columnItem}}}
+                                        <td>
+                                            <router-link :to="{ name: 'cp.admin.{{{name}}}.edit', params: { id: item.id }}" class="btn bg-gradient-primary btn-small">
+                                                Edit
+                                            </router-link>
+                                            <button type="button" class="btn bg-gradient-danger btn-small" v-on:click="deleteRecord(item.id, index)" >Delete</button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer clearfix">
+                <paginate
+                    :page-count="parseInt(meta.last_page)"
+                    :page-range="parseInt(meta.per_page)"
+                    :margin-pages="2"
+                    :click-handler="loadData"
+                    :prev-text="'Prev'"
+                    :next-text="'Next'"
+                    :force-page="parseInt(currentPage)"
+                    :container-class="'pagination pagination-sm m-0 float-right'"
+                    :hide-prev-next="true"
+                    :page-class="'page-item'"
+                    :prev-class="'page-item'"
+                    :next-class="'page-item'"
+                    :page-link-class="'page-link'"
+                    :prev-link-class="'page-link'"
+                    :next-link-class="'page-link'"
+                >
+                </paginate>
+            </div>
+        </div>
+    </div>
+
+</template>
+
+<script>
+    export default {
+        data() {
+            return {
+                list: [],
+                form:{},
+                meta: {
+                    total: 0
+                },
+                currentPage: 1
+            }
+        },
+        created() {
+            let app = this;
+            this.form = { ...this.form, ...this.$route.query };
+            if(this.$route.query.page !== undefined){
+                app.currentPage = parseInt(this.$route.query.page);
+            }
+            this.loadData(app.currentPage, false);
+        },
+        mounted(){
+             let rules_plugins = {
+                 condition: 'AND',
+                 rules: [{
+                     id: 'name',
+                     operator: 'equal',
+                     value: 'Mistic'
+                 }]
+             };
+             $('#builder').queryBuilder({
+                 plugins: [
+                     // 'sortable',
+                     // 'filter-description',
+                     // 'unique-filter',
+                     // 'bt-tooltip-errors',
+                     // 'bt-selectpicker',
+                     // 'bt-checkbox',
+                     // 'invert',
+                     // 'not-group'
+                 ],
+
+                 filters: [{
+                     id: 'name',
+                     label: 'Name',
+                     type: 'string',
+                     unique: true,
+                     description: 'This filter is "unique", it can be used only once'
+                 }],
+                 rules: rules_plugins
+             });
+        },
+        methods: {
+            loadData(pageNum, isFromPaginate = true) {
+                let app = this;
+                let parameter = {...this.$route.query, ...app.form};
+                if (isFromPaginate === true) {
+                    if (pageNum === this.$route.query.page) {
+                        return false;
+                    }
+
+                    parameter.page = pageNum;
+                    app.currentPage = pageNum;
+                    app.$router.push({ name: '{{{name}}}.index', query: parameter });
+                }
+
+                app._httpRequest.get('/{{{name}}}', { params: parameter })
+                .then(function (resp) {
+                    app.list = resp.data.data;
+                    app.meta = resp.data.meta;
+                });
+            },
+            search() {
+                let app = this;
+                let parameter = {...this.$route.query, ...app.form};
+                app.currentPage = 1;
+                parameter.page = 1;
+                app.$router.replace({ name: '{{{name}}}.index', query: parameter })
+                .catch(function (resp) {});
+
+                app._httpRequest.get('/{{{name}}}', { params: parameter })
+                .then(function (resp) {
+                    app.list = resp.data.data;
+                    app.meta = resp.data.meta;
+                });
+
+            },
+            deleteRecord(id, index) {
+                let app = this;
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.value) {
+                        app._httpRequest.delete('/{{{name}}}/' + id)
+                            .then(response => {
+                                Swal.fire(
+                                    'Deleted!',
+                                    'A record has been deleted.',
+                                    'success'
+                                ),
+                                app.list.splice(index, 1);
+                            }).catch(function (resp) {
+                                app.isSubmit = false;
+                                Swal.fire("Something wrong", '', 'error');
+                            });
+
+                    }
+                })
+            }
+        }
+    }
+</script>
