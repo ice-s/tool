@@ -49,12 +49,17 @@ class TableController extends Controller
         $modelName = $request->get('model_name');
         $table = $request->get('table');
         $columns = $request->get('cols');
+
         if ($request->get('hasAuth')) {
-            $this->generateService->generateAuth();
+//            $this->generateService->makeFrontendAuth();
         }
 
         $this->generateService->generate($modelName, $columns, $table);
 
         return redirect()->back()->with('success', 'Generate success');
+    }
+
+    public function makeAuth(){
+        $this->generateService->makeFrontendAuth(true);
     }
 }

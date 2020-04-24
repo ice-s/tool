@@ -42,8 +42,8 @@ class GenerateService
         $this->controllerWebPath     = app_path('Http/Controllers/Web');
         $this->routeApiPath          = base_path('routes/Api');
         $this->routeWebPath          = base_path('routes/Web');
-        $this->frontendComponentsPath = resource_path('js/components');
-        $this->frontendRoutesPath     = resource_path('js/routes');
+        $this->frontendComponentsPath = resource_path('vue/components/admin');
+        $this->frontendRoutesPath     = resource_path('vue/routes');
     }
 
     public function generateAuth()
@@ -59,6 +59,7 @@ class GenerateService
         $this->varTable = $table;
         $this->varForce = true;
         $this->createBase();
+
         $this->create();
     }
 
@@ -127,6 +128,7 @@ class GenerateService
                 $this->createRequest();
                 $this->createApiController();
                 $this->createApiRoute();
+
                 $this->makeFrontendModule();
             }
         }
@@ -261,12 +263,12 @@ class GenerateService
         }
     }
 
-    public function createAuthController()
+    public function createAuthController($force = false)
     {
         $stubFile = $this->getStub('api/AuthController.stub');
         $template = file_get_contents($stubFile);
 
-        if (!file_exists($this->controllerApiPath . "/AuthController.php") || $this->varForce) {
+        if (!file_exists($this->controllerApiPath . "/AuthController.php") || $force) {
             $this->makeDir($this->controllerApiPath);
             file_put_contents($this->controllerApiPath . "/AuthController.php", $template);
         }
@@ -364,7 +366,7 @@ class GenerateService
      */
     protected function getStub($stubName)
     {
-        return __DIR__ . '/../Commands/crud/stub/' . $stubName;
+        return __DIR__ . '/../template/stub/' . $stubName;
     }
 
     protected function makeDir($folderPath)
@@ -374,14 +376,16 @@ class GenerateService
         }
     }
 
-    public function makeFrontendAuth()
+    public function makeFrontendAuth($force = false)
     {
-        if (!file_exists(resource_path('js/config.js'))) {
-            $this->recurse_copy(__DIR__ . "/../Commands/crud/frontend/js", resource_path('js'));
-            $this->recurse_copy(__DIR__ . "/../Commands/crud/frontend/sass", resource_path('sass'));
-            copy(__DIR__ . "/../Commands/crud/frontend/package.json", base_path('package.json'));
-            copy(__DIR__ . "/../Commands/crud/frontend/web.php", base_path('routes/web.php'));
-            copy(__DIR__ . "/../Commands/crud/frontend/welcome.blade.php", resource_path('views/welcome.blade.php'));
+        if (!file_exists(resource_path('js/config.js')) || $force == true) {
+            $this->createAuthController($force);
+
+            $this->recurse_copy(__DIR__ . "/../template/vue", resource_path('vue'));
+            copy(__DIR__ . "/../template/frontend/webpack.mix.js", base_path('webpack.mix.js'));
+            copy(__DIR__ . "/../template/frontend/package.json", base_path('package.json'));
+            copy(__DIR__ . "/../template/frontend/web.php", base_path('routes/web.php'));
+            copy(__DIR__ . "/../template/frontend/vue.blade.php", resource_path('views/vue.blade.php'));
         }
     }
 
@@ -390,6 +394,7 @@ class GenerateService
         $this->makeVueIndex();
         $this->makeVueCreate();
         $this->makeVueEdit();
+
         $this->makeVueRoute();
         $this->makeVueNav();
     }
@@ -400,15 +405,29 @@ class GenerateService
         $template    = file_get_contents($stubIndex);
         $dataReplace = [
             'displayName'  => $this->varName,
-            'name'         => mb_strtolower($this->varName),
-            'columnHeader' => $this->getVueColumnHeader(),
-            'columnItem'   => $this->getVueColumnItem(),
-            'filterTable'   => $this->getVueFilterTable()
+//            'name'         => mb_strtolower($this->varName),
+//            'columnHeader' => $this->getVueColumnHeader(),
+//            'columnItem'   => $this->getVueColumnItem(),
+//            'filterObject'   => json_encode($this->getFilterJson())
         ];
         $template    = $this->replaceStubVue($template, $dataReplace);
         if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Index.vue") || $this->varForce) {
             $this->makeDir($this->frontendComponentsPath . "/" . mb_strtolower($this->varName));
             file_put_contents($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Index.vue",
+                $template);
+        }
+
+        $stubIndex   = $this->getStub('frontend/component/Table.vue.stub');
+        $template    = file_get_contents($stubIndex);
+        $dataReplace = [
+            'name'         => mb_strtolower($this->varName),
+            'column'   => json_encode($this->getTableColumnJson()),
+            'filterObject'   => json_encode($this->getFilterJson())
+        ];
+        $template    = $this->replaceStubVue($template, $dataReplace);
+        if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Table.vue") || $this->varForce) {
+            $this->makeDir($this->frontendComponentsPath . "/" . mb_strtolower($this->varName));
+            file_put_contents($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Table.vue",
                 $template);
         }
     }
@@ -459,15 +478,15 @@ class GenerateService
             'name' => mb_strtolower($this->varName)
         ];
         $template    = $this->replaceStub($template, $dataReplace);
-        if (!file_exists($this->frontendRoutesPath . "/" . mb_strtolower($this->varName) . "/" . $this->varName . ".js") || $this->varForce) {
-            $this->makeDir($this->frontendRoutesPath . "/" . mb_strtolower($this->varName));
-            file_put_contents($this->frontendRoutesPath . "/" . mb_strtolower($this->varName) . "/" . $this->varName . ".js",
+        if (!file_exists($this->frontendRoutesPath . "/admin/" . mb_strtolower($this->varName) . "/" . $this->varName . ".js") || $this->varForce) {
+            $this->makeDir($this->frontendRoutesPath . "/admin/" . mb_strtolower($this->varName));
+            file_put_contents($this->frontendRoutesPath . "/admin/" . mb_strtolower($this->varName) . "/" . $this->varName . ".js",
                 $template);
         }
 
-        $file_contents = file_get_contents(resource_path('js/routes/routes.js'));
-        $strRoute      = 'import ' . $this->varName . ' from "./' . mb_strtolower($this->varName) . '/' . $this->varName . '";
-routes = [...routes, ...' . $this->varName . '];';
+        $file_contents = file_get_contents(resource_path('vue/routes/routes.js'));
+        $strRoute      = 'import ' . $this->varName . ' from "./admin/' . mb_strtolower($this->varName) . '/' . $this->varName . '";
+routes = [...' . $this->varName . ', ...routes];';
         $strRouteRep   = $strRoute . '
 
 const router';
@@ -475,23 +494,23 @@ const router';
         $file_contents = str_replace($strRoute, '', $file_contents);
         $file_contents = preg_replace("/[\r\n]+/", "\n", $file_contents);
         $file_contents = str_replace("const router", $strRouteRep, $file_contents);
-        file_put_contents(resource_path('js/routes/routes.js'), $file_contents);
+        file_put_contents(resource_path('vue/routes/routes.js'), $file_contents);
     }
 
     public function makeVueNav()
     {
-        $navRoute      = $this->getStub('frontend/component/nav.vue.stub');
-        $template    = file_get_contents($navRoute);
-        $dataReplace   = [
-            'displayName' => $this->varName,
-            'name'        => mb_strtolower($this->varName),
-        ];
-        $template      = $this->replaceStubVue($template, $dataReplace);
-        $file_contents = file_get_contents(resource_path('js/components/__common/Nav.vue'));
-        $file_contents = str_replace($template, '', $file_contents);
-        $file_contents = str_replace("        </ul>", $template . "        </ul>", $file_contents);
-
-        file_put_contents(resource_path('js/components/__common/Nav.vue'), $file_contents);
+//        $navRoute      = $this->getStub('frontend/component/nav.vue.stub');
+//        $template    = file_get_contents($navRoute);
+//        $dataReplace   = [
+//            'displayName' => $this->varName,
+//            'name'        => mb_strtolower($this->varName),
+//        ];
+//        $template      = $this->replaceStubVue($template, $dataReplace);
+//        $file_contents = file_get_contents(resource_path('js/components/__common/Nav.vue'));
+//        $file_contents = str_replace($template, '', $file_contents);
+//        $file_contents = str_replace("        </ul>", $template . "        </ul>", $file_contents);
+//
+//        file_put_contents(resource_path('js/components/__common/Nav.vue'), $file_contents);
     }
 
     public function getForm(){
@@ -618,7 +637,17 @@ const router';
             case 'date':
                 $htmlType = 'date';
                 break;
-
+            case 'boolean':
+                $str = "\n" . '<div class="form-group row">
+                    <label for="' . $name . '" class="col-sm-2 col-form-label">' . $displayName . '</label>
+                    <div class="col-sm-10">
+                        <input type="radio" id="male" name="gender" value="1" v-model="object.' . $name . '">
+                            <label for="male">Yes</label>
+                        <input type="radio" id="female" name="gender" value="0" v-model="object.' . $name . '">
+                            <label for="female">No</label>
+                    </div>
+                </div>';
+                break;
             case 'datetime':
                 $htmlType = 'datetime-local';
                 break;
@@ -711,6 +740,72 @@ const router';
         }
 
         return $str;
+    }
+
+    public function getTableColumnJson()
+    {
+        $column = [];
+        foreach ($this->columns as $key => $col) {
+            if(isset($col['filter'])) {
+                $obj            = new \stdClass();
+                $obj->title     = $col['display'];
+                $obj->dataIndex = $col['name'];
+                $obj->sorter    = true;
+                $column[]       = $obj;
+            }
+        }
+
+        $obj            = new \stdClass();
+        $obj->title     = 'Action';
+        $obj->key = 'action';
+        $obj->width    = '10%';
+        $obj->scopedSlots    = new \stdClass();
+        $obj->scopedSlots->customRender = 'action';
+        $column[]       = $obj;
+
+        return $column;
+    }
+
+    public function getFilterJson() {
+        $filter = [];
+        foreach ($this->columns as $key => $col) {
+            if(isset($col['filter'])) {
+                $obj = new \stdClass();
+                $obj->id = $col['name'];
+                $obj->label = $col['display'];
+                $obj->type = 'string';
+
+                if (in_array($col['type'], ['bigint', 'integer', 'float'])) {
+                    $obj->type = 'integer';
+                }
+
+                if (in_array($col['type'], ['float'])) {
+                    $obj->type = 'double';
+                }
+
+                if (in_array($col['type'], ['date', 'datetime'])) {
+                    $obj->type = 'date';
+                    $validObj = new \stdClass();
+                    $validObj->format = 'YYYY/MM/DD';
+                    $obj->validation = $validObj;
+                    $obj->plugin = 'datepicker';
+                    $pluginConfig = new \stdClass();
+                    $pluginConfig->format = 'yyyy/mm/dd';
+                    $pluginConfig->todayBtn = 'linked';
+                    $pluginConfig->todayHighlight = true;
+                    $pluginConfig->autoclose = true;
+                    $obj->plugin_config = $pluginConfig;
+                }
+
+                if (in_array($col['type'], ['boolean'])) {
+                    $obj->type = 'boolean';
+                }
+
+                $filter[] = $obj;
+            }
+        }
+
+        return $filter;
     }
 
     function recurse_copy($src, $dst)

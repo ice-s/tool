@@ -1,0 +1,54 @@
+<template>
+    <div>
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="content-header">
+                        <div class="container-fluid">
+                            <div class="row mb-2">
+                                <a-breadcrumb>
+                                    <a-breadcrumb-item><a href="">Home</a></a-breadcrumb-item>
+                                    <a-breadcrumb-item>{{{displayName}}}</a-breadcrumb-item>
+                                </a-breadcrumb>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <TableComponent></TableComponent>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</template>
+
+<script>
+    import TableComponent from './Table';
+    export default {
+        data() {
+            return {
+                meta: {
+                    total: 0
+                }
+            }
+        },
+        components: {
+            'TableComponent': TableComponent
+        },
+        created() {
+        },
+        mounted(){
+
+        },
+        methods: {
+
+        }
+    }
+</script>
+
+<style>
+.ant-breadcrumb{
+    margin-top: 10px;
+}
+</style>

@@ -1,0 +1,180 @@
+<template>
+    <div>
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="card p-3">
+                    <div class="row">
+                        <form action="" autocomplete="off">
+                            <div id="builder"></div>
+                        </form>
+                    </div>
+                    <div class="row">
+                        <div class="form-group">
+                            <a-button type="primary" icon="search" v-on:click="search">
+                                Search
+                            </a-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div>
+                        <a-button type="" icon="plus" v-on:click="search">
+                            <router-link :to="{ name: 'cp.admin.{{{name}}}.create' }">
+                                New
+                            </router-link>
+                        </a-button>
+                        <label class="card-tools">
+                            <span>Total Item: {{pagination.total}}</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a-table
+            :columns="columns"
+            :rowKey="record => record.id"
+            :dataSource="data"
+            :pagination="pagination"
+            :loading="loading"
+            @change="handleTableChange"
+        >
+            <span slot="action" slot-scope="text, record">
+             <router-link :to="{ name: 'cp.admin.{{{name}}}.edit', params: { id: record.id }}">
+                 Edit
+             </router-link>
+              <a-divider type="vertical" />
+              <a>Delete</a>
+            </span>
+        </a-table>
+    </div>
+</template>
+<script>
+    const columns = {{{column}}};
+
+    export default {
+        mounted() {
+            let app = this;
+            let rules_plugins = {
+                  condition: 'AND',
+                  rules: [{}]
+            };
+             try {
+                  $('#builder').queryBuilder({
+                      plugins: [
+                          'sortable',
+                          'filter-description',
+                          'unique-filter',
+                          'bt-selectpicker',
+                          'bt-checkbox',
+                          'invert',
+                          'not-group'
+                      ],
+
+                      filters: app.filterObject,
+                      rules: rules_plugins
+                  }).catch(function (resp) {});
+             }
+             catch(err) {
+
+             }
+            this.fetch();
+        },
+        data() {
+            return {
+                data: [],
+                pagination: {},
+                loading: false,
+                columns,
+                filterObject : {{{filterObject}}}
+            };
+        },
+        methods: {
+            handleTableChange(pagination, filters, sorter) {
+                const pager = { ...this.pagination };
+                pager.current = pagination.current;
+                this.pagination = pager;
+                let sort = '';
+                if(sorter) {
+                    sort = sorter.field
+                    if(sorter.order === 'descend') {
+                        sort = "-" + sorter.field;
+                    }
+                }
+                let params = {
+                    page: pagination.current,
+                    sort: sort,
+                    ...filters,
+                };
+                this.fetch(params);
+            },
+            fetch(params = {}) {
+                this.loading = true;
+                if(params.sort === undefined) {
+                    params.sort = '-id';
+                }
+                this._httpRequest.get('/{{{name}}}', {params : params}).then(response => {
+                    const pagination = { ...this.pagination };
+                    pagination.total = response.data.meta.total;
+                    pagination.current = response.data.meta.current_page;
+                    pagination.pageSize = response.data.meta.per_page;
+                    this.loading = false;
+                    this.data = response.data.data;
+                    this.pagination = pagination;
+                });
+            },
+
+            search() {
+                let app = this;
+                let Rules = $('#builder').queryBuilder('getRules');
+                if(Rules){
+                    let params = {
+                        page: 1,
+                        rules: Rules
+                    };
+
+                    this.fetch(params);
+                }else {
+                    return false;
+                }
+            },
+            deleteRecord(id, index) {
+                let app = this;
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.value) {
+                        app._httpRequest.delete('/{{{name}}}/' + id)
+                            .then(response => {
+                                Swal.fire(
+                                    'Deleted!',
+                                    'A record has been deleted.',
+                                    'success'
+                                ),
+                                app.list.splice(index, 1);
+                            }).catch(function (resp) {
+                                app.isSubmit = false;
+                                Swal.fire("Something wrong", '', 'error');
+                            });
+
+                    }
+                })
+            }
+        },
+    };
+</script>
+
+<style>
+    .ant-table-wrapper{
+        margin-top: 20px;
+    }
+</style>

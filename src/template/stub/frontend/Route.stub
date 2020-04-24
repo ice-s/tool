@@ -1,0 +1,25 @@
+import Index from '../../../components/admin/{{name}}/Index';
+import Edit from '../../../components/admin/{{name}}/Edit';
+import Create from '../../../components/admin/{{name}}/Create';
+import Role from '../../../consts/role';
+
+export default [
+    {
+        path: Role.ROLE_ADMIN_PREFIX_URL + '{{name}}',
+        name: 'cp.admin.' + '{{name}}.index',
+        component: Index,
+        meta: Role.ROLE_AUTH_ADMIN_CONFIG
+    },
+    {
+        path: Role.ROLE_ADMIN_PREFIX_URL + '{{name}}/create',
+       name: 'cp.admin.' + '{{name}}.create',
+        component: Create,
+        meta: Role.ROLE_AUTH_ADMIN_CONFIG
+    },
+    {
+        path: Role.ROLE_ADMIN_PREFIX_URL + '{{name}}/:id/edit',
+       name: 'cp.admin.' + '{{name}}.edit',
+        component: Edit,
+        meta: Role.ROLE_AUTH_ADMIN_CONFIG
+    }
+];
