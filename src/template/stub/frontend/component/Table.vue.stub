@@ -22,7 +22,7 @@
             <div class="col-md-12">
                 <div class="card">
                     <div>
-                        <a-button type="" icon="plus" v-on:click="search">
+                        <a-button type="" icon="plus">
                             <router-link :to="{ name: 'cp.admin.{{{name}}}.create' }">
                                 New
                             </router-link>
@@ -46,8 +46,13 @@
              <router-link :to="{ name: 'cp.admin.{{{name}}}.edit', params: { id: record.id }}">
                  Edit
              </router-link>
-              <a-divider type="vertical" />
-              <a>Delete</a>
+             <a-divider type="vertical" />
+             <a-popconfirm
+                title="Sure to delete?"
+                @confirm="() => deleteRecord(record.id)"
+             >
+                  <a href="javascript:;">Delete</a>
+             </a-popconfirm>
             </span>
         </a-table>
     </div>
@@ -141,7 +146,7 @@
                     return false;
                 }
             },
-            deleteRecord(id, index) {
+            deleteRecord(id) {
                 let app = this;
                 Swal.fire({
                     title: 'Are you sure?',
@@ -159,8 +164,9 @@
                                     'Deleted!',
                                     'A record has been deleted.',
                                     'success'
-                                ),
-                                app.list.splice(index, 1);
+                                );
+                                const dataSource = [...app.data];
+                                app.data = dataSource.filter(item => item.id !== id);
                             }).catch(function (resp) {
                                 app.isSubmit = false;
                                 Swal.fire("Something wrong", '', 'error');

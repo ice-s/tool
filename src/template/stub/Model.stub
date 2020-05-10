@@ -8,5 +8,7 @@ class {{Name}} extends BaseModel
 {
     protected $table = '{{Table}}';
 
+    public $timestamps = false;
+
     protected $fillable = {{fillable}};
 }

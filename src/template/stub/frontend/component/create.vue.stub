@@ -8,8 +8,17 @@
                     </div>
                     <div class="col-sm-12">
                         <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="#">Home</a></li>
-                            <li class="breadcrumb-item active">{{{displayName}}}</li>
+                            <li class="breadcrumb-item">
+                                <router-link :to="{ name: 'cp.admin.home' }">
+                                    Home
+                                </router-link>
+                            </li>
+                            <li class="breadcrumb-item active">
+                                <router-link :to="{ name: 'cp.admin.{{{name}}}.index' }">
+                                    {{{displayName}}}
+                                </router-link>
+                            </li>
+                            <li class="breadcrumb-item active">Create</li>
                         </ol>
                     </div>
                 </div>
@@ -19,56 +28,70 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-6">
-                        <div class="card card-info">
-                            <div class="card-header">
-                               <h3 class="card-title">New {{{displayName}}}</h3>
-                            </div>
-                            <!-- /.card-header -->
-                            <!-- form start -->
-                            <form class="form-horizontal">
-                               <div class="card-body">
-                                   {{{form}}}
-                               </div>
-                               <!-- /.card-body -->
-                               <div class="card-footer">
-                                   <button type="button" v-on:click="submit()" :disabled="isSubmit" class="btn btn-info">Create</button>
-                               </div>
-                               <!-- /.card-footer -->
-                            </form>
-                        </div>
+                        <a-form-model
+                            ref="ruleForm"
+                            :model="form"
+                            :rules="rules"
+                            :label-col="labelCol"
+                            :wrapper-col="wrapperCol"
+                        >
+                            {{{fieldModelItems}}}
+                            <a-form-model-item :wrapper-col="{ span: 14, offset: 4 }">
+                                <a-button type="primary" @click="onSubmit">
+                                    Create
+                                </a-button>
+                                <a-button style="margin-left: 10px;">
+                                    Cancel
+                                </a-button>
+                            </a-form-model-item>
+                        </a-form-model>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </template>
 
 <script>
     export default {
         data() {
             return {
-                object: {},
-                isSubmit: false
-            }
-        },
-        created() {
-            let app = this;
+                labelCol: {span: 6},
+                wrapperCol: {span: 14},
+                other: '',
+                form: {},
+                rules: {{{rulesValidate}}},
+            };
         },
         methods: {
-            submit() {
-                let app = this;
-                app.isSubmit = true;
-
-                this._httpRequest.post('/{{{name}}}', {{{filter}}})
-                .then(function (resp) {
-                    app.isSubmit = false;
-                    Swal.fire("Create successful", '', 'success');
-                }).catch(function (resp) {
-                    app.isSubmit = false;
-                    Swal.fire("Something wrong", '', 'error');
+            onSubmit() {
+                this.$refs.ruleForm.validate(valid => {
+                    if (valid) {
+                        let app = this;
+                        let data = {...this.form};
+{{{convertDataSubmit}}}
+                        app._httpRequest.post('/{{{name}}}', data)
+                            .then(function (resp) {
+                                Swal.fire("Create successful", '', 'success');
+                                app.resetForm();
+                            }).catch(function (resp) {
+                            Swal.fire("Something wrong", '', 'error');
+                        });
+                    } else {
+                        Swal.fire("Form invalid", '', 'error');
+                    }
                 });
-            }
-        }
-    }
+            },
+            resetForm() {
+                this.$refs.ruleForm.resetFields();
+            },
+        },
+    };
 </script>
+<style>
+    .ant-form{
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 5px;
+    }
+</style>

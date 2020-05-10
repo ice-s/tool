@@ -1,6 +1,8 @@
-            <li class="nav-item">
-                <router-link tag="a" to="/{{{name}}}" class="nav-link">
-                    <i class="nav-icon fas fa-align-justify"></i>
-                    <p>{{{displayName}}}</p>
+            <a-menu-item key="menu_{{{name}}}">
+                <router-link tag="a"  :to="{ name: 'cp.admin.{{{name}}}.index' }">
+                    <a-icon type="user"/>
+                    <span class="">
+                            {{{displayName}}}
+                    </span>
                 </router-link>
-            </li>
+            </a-menu-item>

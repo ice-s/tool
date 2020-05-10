@@ -1,0 +1,32 @@
+<template>
+    <a-layout-sider width="200" style="background: #fff">
+        <a-menu
+                mode="inline"
+                :defaultSelectedKeys="['1']"
+                :defaultOpenKeys="['sub1']"
+                :style="{ height: '100%', borderRight: 0 }"
+        >
+            {{{menu}}}
+
+            <a-menu-item key="menu3" v-on:click="clickLogout">
+                <a-icon type="logout" />
+                <span class="">Logout</span>
+            </a-menu-item>
+        </a-menu>
+    </a-layout-sider>
+</template>
+
+<script>
+    export default {
+        data: function () {
+            return {
+
+            }
+        },
+        methods: {
+            clickLogout() {
+                this.logout();
+            }
+        }
+    }
+</script>

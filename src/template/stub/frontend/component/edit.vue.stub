@@ -8,8 +8,17 @@
                     </div>
                     <div class="col-sm-12">
                         <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="#">Home</a></li>
-                            <li class="breadcrumb-item active">{{{displayName}}}</li>
+                            <li class="breadcrumb-item">
+                                <router-link :to="{ name: 'cp.admin.home' }">
+                                    Home
+                                </router-link>
+                            </li>
+                            <li class="breadcrumb-item active">
+                                <router-link :to="{ name: 'cp.admin.{{{name}}}.index' }">
+                                    {{{displayName}}}
+                                </router-link>
+                            </li>
+                            <li class="breadcrumb-item active">Edit</li>
                         </ol>
                     </div>
                 </div>
@@ -19,60 +28,75 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-6">
-                        <div class="card card-info">
-                            <div class="card-header">
-                               <h3 class="card-title">Edit {{{displayName}}}</h3>
-                            </div>
-                            <!-- /.card-header -->
-                            <!-- form start -->
-                            <form class="form-horizontal" >
-                               <div class="card-body">
-                                   {{{form}}}
-                               </div>
-                               <!-- /.card-body -->
-                               <div class="card-footer">
-                                   <button type="button" v-on:click="submit()" :disabled="isSubmit" class="btn btn-info">Update</button>
-                               </div>
-                               <!-- /.card-footer -->
-                            </form>
-                        </div>
+                        <a-form-model
+                            ref="ruleForm"
+                            :model="form"
+                            :rules="rules"
+                            :label-col="labelCol"
+                            :wrapper-col="wrapperCol"
+                        >
+                            {{{fieldModelItems}}}
+                            <a-form-model-item :wrapper-col="{ span: 14, offset: 4 }">
+                                <a-button type="primary" @click="onSubmit">
+                                    Update
+                                </a-button>
+                                <a-button style="margin-left: 10px;">
+                                    Cancel
+                                </a-button>
+                            </a-form-model-item>
+                        </a-form-model>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </template>
-
 <script>
     export default {
         data() {
             return {
-                object: {},
-                isSubmit: false
-            }
+                labelCol: {span: 6},
+                wrapperCol: {span: 14},
+                other: '',
+                form: {},
+                rules: {{{rulesValidate}}},
+            };
         },
         created() {
             let app = this;
             let parameter = {...this.$route.query};
             this._httpRequest.get('/{{{name}}}/' + this.$route.params.id)
                 .then(function (resp) {
-                    app.object = resp.data.data;
-                });
+                    app.form = resp.data.data;
+{{{convertMoment}}}
+            });
         },
         methods: {
-            submit() {
-                let app = this;
-                app.isSubmit = true;
-                this._httpRequest.put('/{{{name}}}/' + this.$route.params.id, {{{filter}}})
-                .then(function (resp) {
-                    app.isSubmit = false;
-                    Swal.fire("Update successful", '', 'success');
-                }).catch(function (resp) {
-                    app.isSubmit = false;
-                    Swal.fire("Something wrong", '', 'error');
+            onSubmit() {
+                this.$refs.ruleForm.validate(valid => {
+                    if (valid) {
+                        let app = this;
+                        let data = {...this.form};
+{{{convertDataSubmit}}}
+                        console.log(data);
+                        app._httpRequest.put('/{{{name}}}/' + this.$route.params.id, data)
+                            .then(function (resp) {
+                                Swal.fire("Update successful", '', 'success');
+                            }).catch(function (resp) {
+                            Swal.fire("Something wrong", '', 'error');
+                        });
+                    } else {
+                        Swal.fire("Form invalid", '', 'error');
+                    }
                 });
             }
-        }
-    }
+        },
+    };
 </script>
+<style>
+    .ant-form{
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 5px;
+    }
+</style>

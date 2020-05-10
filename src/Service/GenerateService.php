@@ -2,6 +2,8 @@
 
 namespace Ices\Tool\Service;
 
+use Ices\Tool\Helper\FormHelper;
+use Ices\Tool\Helper\ValidateHelper;
 use Illuminate\Support\Facades\File;
 
 class GenerateService
@@ -31,6 +33,9 @@ class GenerateService
     protected $apiNameSpace = "Api";
     protected $webNameSpace = "Web";
 
+    protected $formHelper;
+    protected $validateHelper;
+
     public function __construct()
     {
         $this->modelPath             = app_path('Entities/Models');
@@ -44,6 +49,9 @@ class GenerateService
         $this->routeWebPath          = base_path('routes/Web');
         $this->frontendComponentsPath = resource_path('vue/components/admin');
         $this->frontendRoutesPath     = resource_path('vue/routes');
+
+        $this->formHelper = new FormHelper();
+        $this->validateHelper = new ValidateHelper();
     }
 
     public function generateAuth()
@@ -393,7 +401,7 @@ class GenerateService
     {
         $this->makeVueIndex();
         $this->makeVueCreate();
-        $this->makeVueEdit();
+        $this->makeVueEdit2();
 
         $this->makeVueRoute();
         $this->makeVueNav();
@@ -404,11 +412,8 @@ class GenerateService
         $stubIndex   = $this->getStub('frontend/component/index.vue.stub');
         $template    = file_get_contents($stubIndex);
         $dataReplace = [
+            'name'        => mb_strtolower($this->varName),
             'displayName'  => $this->varName,
-//            'name'         => mb_strtolower($this->varName),
-//            'columnHeader' => $this->getVueColumnHeader(),
-//            'columnItem'   => $this->getVueColumnItem(),
-//            'filterObject'   => json_encode($this->getFilterJson())
         ];
         $template    = $this->replaceStubVue($template, $dataReplace);
         if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Index.vue") || $this->varForce) {
@@ -439,13 +444,34 @@ class GenerateService
         $dataReplace = [
             'displayName' => $this->varName,
             'name'        => mb_strtolower($this->varName),
-            'form'        => $this->getForm(),
-            'filter'        => $this->getObjectJavaScript(),
+            'fieldModelItems' => $this->formHelper->createForm($this->columns),
+            'convertDataSubmit' => $this->formHelper->convertDataSubmit($this->columns),
+            'rulesValidate' => $this->validateHelper->createValidate($this->columns)
         ];
         $template    = $this->replaceStubVue($template, $dataReplace);
         if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Create.vue") || $this->varForce) {
             $this->makeDir($this->frontendComponentsPath . "/" . mb_strtolower($this->varName));
             file_put_contents($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Create.vue",
+                $template);
+        }
+    }
+
+    public function makeVueEdit2()
+    {
+        $stubCreate  = $this->getStub('frontend/component/edit.vue.stub');
+        $template    = file_get_contents($stubCreate);
+        $dataReplace = [
+            'displayName' => $this->varName,
+            'name'        => mb_strtolower($this->varName),
+            'fieldModelItems' => $this->formHelper->createForm($this->columns, true),
+            'convertMoment' => $this->formHelper->convertMoment($this->columns),
+            'convertDataSubmit' => $this->formHelper->convertDataSubmit($this->columns, true),
+            'rulesValidate' => $this->validateHelper->createValidate($this->columns),
+        ];
+        $template    = $this->replaceStubVue($template, $dataReplace);
+        if (!file_exists($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Edit.vue") || $this->varForce) {
+            $this->makeDir($this->frontendComponentsPath . "/" . mb_strtolower($this->varName));
+            file_put_contents($this->frontendComponentsPath . "/" . mb_strtolower($this->varName) . "/Edit.vue",
                 $template);
         }
     }
@@ -484,33 +510,62 @@ class GenerateService
                 $template);
         }
 
-        $file_contents = file_get_contents(resource_path('vue/routes/routes.js'));
-        $strRoute      = 'import ' . $this->varName . ' from "./admin/' . mb_strtolower($this->varName) . '/' . $this->varName . '";
-routes = [...' . $this->varName . ', ...routes];';
-        $strRouteRep   = $strRoute . '
+//        $file_contents = file_get_contents(resource_path('vue/routes/routes.js'));
+//        $strRoute      = 'import ' . $this->varName . ' from "./admin/' . mb_strtolower($this->varName) . '/' . $this->varName . '";
+//routes = [...' . $this->varName . ', ...routes];';
+//        $strRouteRep   = $strRoute . '
+//
+//const router';
+//
+//        $file_contents = str_replace($strRoute, '', $file_contents);
+//        $file_contents = preg_replace("/[\r\n]+/", "\n", $file_contents);
+//        $file_contents = str_replace("const router", $strRouteRep, $file_contents);
+//        file_put_contents(resource_path('vue/routes/routes.js'), $file_contents);
+        $import = '';
+        $list = '';
+        if(file_exists(base_path('ConfigApp.json'))) {
+            $configJson = file_get_contents(base_path('ConfigApp.json'));
+            $configAll  = json_decode($configJson, true);
+            foreach ($configAll as $config){
+                $import .= 'import '.$config['model_name'].' from "./admin/'.mb_strtolower($config['model_name']).'/'.$config['model_name'].'";'."\n";
+                $list .= "...".$config['model_name'].", ";
+            }
+        }
+        $template = file_get_contents($this->getStub('frontend/js/routes.js'));
+        $dataReplace = [
+            'import' => $import,
+            'list' => $list
+        ];
+        $template    = $this->replaceStub($template, $dataReplace);
 
-const router';
-
-        $file_contents = str_replace($strRoute, '', $file_contents);
-        $file_contents = preg_replace("/[\r\n]+/", "\n", $file_contents);
-        $file_contents = str_replace("const router", $strRouteRep, $file_contents);
-        file_put_contents(resource_path('vue/routes/routes.js'), $file_contents);
+        file_put_contents(resource_path('vue/routes/routes.js'), $template);
     }
 
     public function makeVueNav()
     {
-//        $navRoute      = $this->getStub('frontend/component/nav.vue.stub');
-//        $template    = file_get_contents($navRoute);
-//        $dataReplace   = [
-//            'displayName' => $this->varName,
-//            'name'        => mb_strtolower($this->varName),
-//        ];
-//        $template      = $this->replaceStubVue($template, $dataReplace);
-//        $file_contents = file_get_contents(resource_path('js/components/__common/Nav.vue'));
-//        $file_contents = str_replace($template, '', $file_contents);
-//        $file_contents = str_replace("        </ul>", $template . "        </ul>", $file_contents);
-//
-//        file_put_contents(resource_path('js/components/__common/Nav.vue'), $file_contents);
+        $menuContent = '';
+        if(file_exists(base_path('ConfigApp.json'))) {
+            $configJson = file_get_contents(base_path('ConfigApp.json'));
+            $configAll  = json_decode($configJson, true);
+            foreach ($configAll as $config){
+                $navRoute      = $this->getStub('frontend/component/nav.vue.stub');
+                $template    = file_get_contents($navRoute);
+                $dataReplace   = [
+                    'displayName' => $config['model_name'],
+                    'name'        => mb_strtolower($config['model_name']),
+                ];
+                $template      = $this->replaceStubVue($template, $dataReplace);
+                $menuContent .= $template;
+            }
+        }
+
+        $sb      = $this->getStub('frontend/component/Sidebar.vue.stub');
+        $template    = file_get_contents($sb);
+        $dataReplace = [
+            'menu' => $menuContent
+        ];
+        $file_contents    = $this->replaceStubVue($template, $dataReplace);
+        file_put_contents(resource_path('vue/components/admin/_partials/Sidebar.vue'), $file_contents);
     }
 
     public function getForm(){
